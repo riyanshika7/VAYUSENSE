@@ -1,0 +1,39 @@
+services:
+  # ─── VayuSense FastAPI Backend Service ──────────────────────────────────────
+  - type: web
+    name: vayusense-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: WAQI_API_TOKEN
+        value: demo
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: GEMINI_REQUEST_TIMEOUT
+        value: "30.0"
+      - key: WAQI_REQUEST_TIMEOUT
+        value: "10.0"
+      - key: CORS_ORIGINS
+        value: '["*"]'
+      - key: GEMINI_API_KEY
+        sync: false
+
+  # ─── VayuSense React Frontend Static Site ───────────────────────────────────
+  - type: static
+    name: vayusense-frontend
+    rootDir: frontend
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: vayusense-backend
+          property: host
