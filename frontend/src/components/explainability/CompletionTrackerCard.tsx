@@ -13,8 +13,6 @@ import {
   CheckCircle2,
   Circle,
   RotateCcw,
-  ShieldCheck,
-  Sparkles,
   Award,
 } from 'lucide-react';
 import { RuleRecommendation } from '../../types/recommendation';
@@ -103,7 +101,15 @@ export const CompletionTrackerCard: React.FC<CompletionTrackerCardProps> = ({
         </div>
 
         {/* Bar */}
-        <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+        <div
+          className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden"
+          role="progressbar"
+          aria-valuenow={percentage}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Daily action adherence progress"
+          aria-valuetext={`${completedCount} of ${total} actions completed, ${rating.label} (${percentage}%)`}
+        >
           <div
             className={`h-full rounded-full transition-all duration-500 ${rating.bar}`}
             style={{ width: `${Math.max(4, percentage)}%` }}
@@ -120,6 +126,9 @@ export const CompletionTrackerCard: React.FC<CompletionTrackerCardProps> = ({
           return (
             <button
               type="button"
+              role="checkbox"
+              aria-checked={isDone}
+              aria-label={`Mark "${rec.action}" as ${isDone ? 'pending' : 'completed'}`}
               key={key}
               onClick={() => onToggleAction(key)}
               className={`w-full p-3.5 rounded-xl border text-left flex items-start gap-3 transition-all ${

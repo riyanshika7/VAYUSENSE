@@ -12,15 +12,10 @@
 
 import React, { useState } from 'react';
 import {
-  Users,
   Save,
-  RotateCcw,
-  Sparkles,
   CheckCircle2,
-  BookmarkPlus,
   Info,
   ShieldCheck,
-  Lock,
 } from 'lucide-react';
 import { HouseholdProfile } from '../../types/profile';
 import { PresetSelector } from './PresetSelector';
@@ -101,7 +96,12 @@ export const ProfileSetupPage: React.FC<ProfileSetupPageProps> = ({
 
           {/* Profile Name & Save Field */}
           <form onSubmit={handleSaveName} className="flex items-center gap-2 self-start md:self-auto">
+            <label htmlFor="household-name-input" className="sr-only">
+              Household Name
+            </label>
             <input
+              id="household-name-input"
+              aria-label="Household profile name"
               type="text"
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
@@ -113,7 +113,7 @@ export const ProfileSetupPage: React.FC<ProfileSetupPageProps> = ({
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors shadow-sm"
               title="Save profile name"
             >
-              <Save className="w-3.5 h-3.5" />
+              <Save className="w-3.5 h-3.5" aria-hidden="true" />
               Save
             </button>
           </form>
@@ -139,8 +139,8 @@ export const ProfileSetupPage: React.FC<ProfileSetupPageProps> = ({
             Any parameter changes below immediately update your active exposure assessment & routine recommendations.
           </span>
           {showSaveToast && (
-            <span className="text-emerald-700 font-bold flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+            <span role="status" aria-live="polite" className="text-emerald-700 font-bold flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
               Saved to local store
             </span>
           )}

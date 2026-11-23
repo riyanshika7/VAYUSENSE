@@ -30,6 +30,15 @@ interface AQIHeroCardProps {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+function isSafeUrl(url?: string | null): boolean {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url.trim());
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
 function getCategoryTheme(cat: string) {
   switch (cat.toLowerCase()) {
     case 'good':
@@ -173,15 +182,16 @@ export const AQIHeroCard: React.FC<AQIHeroCardProps> = ({
             <Clock className="w-3 h-3 mr-1" />
             {freshness.label}
           </Badge>
-          {aqiData.station_url && (
+          {isSafeUrl(aqiData.station_url) && (
             <a
-              href={aqiData.station_url}
+              href={aqiData.station_url!}
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-50 transition-colors"
               title="View on aqicn.org"
+              aria-label={`View ${aqiData.station_name} station on aqicn.org (opens in a new tab)`}
             >
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-4 h-4" aria-hidden="true" />
             </a>
           )}
         </div>
@@ -217,10 +227,10 @@ export const AQIHeroCard: React.FC<AQIHeroCardProps> = ({
         {/* Health implication + methodology note */}
         <div className="md:col-span-7 space-y-3 bg-white/70 rounded-xl p-4 border border-black/5">
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <ShieldAlert className="w-3.5 h-3.5" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+              <ShieldAlert className="w-3.5 h-3.5" aria-hidden="true" />
               Health Implication
-            </h4>
+            </h3>
             <p className="text-sm text-slate-700 mt-1 leading-relaxed">
               {classification?.health_implications ||
                 'Live air quality status reported by monitoring station.'}
@@ -261,11 +271,11 @@ export const AQIHeroCard: React.FC<AQIHeroCardProps> = ({
             <span className="text-slate-300">·</span>
           )}
           {aqiData.attributions.slice(0, 2).map((attr, i) => (
-            attr.url
+            isSafeUrl(attr.url)
               ? (
                 <a
                   key={i}
-                  href={attr.url}
+                  href={attr.url!}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-slate-500 hover:text-vayu-700 hover:underline transition-colors"

@@ -5,7 +5,6 @@ from typing import List, Optional
 from app.models.aqi import AQIResponse
 from app.models.profile import (
     CommuteMode,
-    ExerciseTimeOfDay,
     HouseholdProfile,
     VentilationCondition,
 )

@@ -48,9 +48,9 @@ class VentilationCondition(str, Enum):
 class TimeWindow(BaseModel):
     """Time window for scheduled activities (e.g., commute, cooking, exercise)."""
 
-    label: str = Field(..., description="Description of the window, e.g., 'Morning commute'")
-    start_time: str = Field(..., description="Start time in 24h format HH:MM, e.g., '08:00'")
-    end_time: str = Field(..., description="End time in 24h format HH:MM, e.g., '10:00'")
+    label: str = Field(..., max_length=60, description="Description of the window, e.g., 'Morning commute'")
+    start_time: str = Field(..., max_length=10, description="Start time in 24h format HH:MM, e.g., '08:00'")
+    end_time: str = Field(..., max_length=10, description="End time in 24h format HH:MM, e.g., '10:00'")
 
 
 class ExerciseHabits(BaseModel):
@@ -120,7 +120,7 @@ class PurifierSetup(BaseModel):
         default=False,
         description="Whether the household has one or more operational HEPA/carbon air purifiers",
     )
-    purifier_count: int = Field(default=0, ge=0, description="Total number of functional purifiers")
+    purifier_count: int = Field(default=0, ge=0, le=50, description="Total number of functional purifiers")
     located_in_bedrooms: bool = Field(default=False, description="Purifier active in sleeping quarters")
     operates_continuously: bool = Field(
         default=False,
@@ -131,13 +131,14 @@ class PurifierSetup(BaseModel):
 class HouseholdProfile(BaseModel):
     """Comprehensive household demographic and lifestyle exposure profile."""
 
-    profile_id: Optional[str] = Field(default=None, description="Optional profile identifier or label")
-    profile_name: Optional[str] = Field(default="My Household", description="User-friendly name for this profile")
+    profile_id: Optional[str] = Field(default=None, max_length=64, description="Optional profile identifier or label")
+    profile_name: Optional[str] = Field(default="My Household", max_length=100, description="User-friendly name for this profile")
 
     # Demographics
     num_adults: int = Field(default=1, ge=0, le=20, description="Number of adults aged 18-59")
     children_ages: List[int] = Field(
         default_factory=list,
+        max_length=20,
         description="List of ages for each child under 18 in the household (e.g. [4, 9])",
     )
     num_older_adults: int = Field(

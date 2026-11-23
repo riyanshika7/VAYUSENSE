@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldCheck, ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { ShieldCheck, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { RiskAssessmentResult } from '../../types/recommendation';
 import { Badge } from '../common/Badge';
 
@@ -77,7 +77,15 @@ export const ExposureRiskScoreCard: React.FC<ExposureRiskScoreCardProps> = ({
         </div>
 
         {/* 0-100 Gauge Bar */}
-        <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden p-0.5 border border-slate-200/60">
+        <div
+          className="w-full bg-slate-100 rounded-full h-3 overflow-hidden p-0.5 border border-slate-200/60"
+          role="meter"
+          aria-valuenow={riskScore}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Household personal exposure risk score"
+          aria-valuetext={`${riskScore.toFixed(1)} out of 100, ${riskLevel} risk`}
+        >
           <div
             className={`h-full rounded-full transition-all duration-500 ${color.bg}`}
             style={{ width: `${Math.max(4, Math.min(100, riskScore))}%` }}
@@ -115,13 +123,15 @@ export const ExposureRiskScoreCard: React.FC<ExposureRiskScoreCardProps> = ({
           <button
             onClick={() => setShowAudit(!showAudit)}
             className="w-full flex items-center justify-between text-xs font-semibold text-vayu-800 hover:text-vayu-900 py-1"
+            aria-expanded={showAudit}
+            aria-controls="exposure-risk-breakdown"
           >
             <span>Explainable Scoring Components ({showAudit ? 'Hide Audit Trail' : 'View Audit Trail'})</span>
-            {showAudit ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {showAudit ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ChevronDown className="w-4 h-4" aria-hidden="true" />}
           </button>
 
           {showAudit && (
-            <div className="mt-3 space-y-2.5 text-xs text-slate-600 bg-slate-50/60 p-3.5 rounded-xl border border-slate-100">
+            <div id="exposure-risk-breakdown" className="mt-3 space-y-2.5 text-xs text-slate-600 bg-slate-50/60 p-3.5 rounded-xl border border-slate-100">
               <div className="grid grid-cols-2 gap-2 pb-2 border-b border-slate-200/60">
                 <div>
                   <span className="text-slate-400 block text-[11px]">Base Ambient AQI:</span>

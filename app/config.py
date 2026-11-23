@@ -43,23 +43,39 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    DEFAULT_TRUSTED_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+    ]
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
         """Parse CORS origins whether provided as a JSON array or comma-separated string."""
+        trusted_default = [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+        ]
         if isinstance(v, str):
             v_trimmed = v.strip()
             if v_trimmed.startswith("[") and v_trimmed.endswith("]"):
                 try:
                     parsed = json.loads(v_trimmed)
                     if isinstance(parsed, list):
-                        return [str(item).strip() for item in parsed]
+                        result = [str(item).strip() for item in parsed if str(item).strip()]
+                        return result or trusted_default
                 except json.JSONDecodeError:
                     pass
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
+            origins = [origin.strip() for origin in v.split(",") if origin.strip()]
+            return origins or trusted_default
         elif isinstance(v, list):
-            return [str(item).strip() for item in v]
-        return ["*"]
+            result = [str(item).strip() for item in v if str(item).strip()]
+            return result or trusted_default
+        return trusted_default
 
     @property
     def is_waqi_configured(self) -> bool:

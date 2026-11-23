@@ -13,7 +13,7 @@ interface SkeletonProps {
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({ className = '' }) => (
-  <div className={`animate-pulse rounded-lg bg-slate-200/80 ${className}`} />
+  <div aria-hidden="true" className={`animate-pulse rounded-lg bg-slate-200/80 ${className}`} />
 );
 
 // ─── AQI Hero Card skeleton ───────────────────────────────────────────────────

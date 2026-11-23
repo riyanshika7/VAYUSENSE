@@ -13,11 +13,8 @@ import {
   Wand2,
   Loader2,
   CheckCircle2,
-  XCircle,
   AlertCircle,
-  ArrowRight,
   Sparkles,
-  Info,
 } from 'lucide-react';
 import { ParsedProfileSuggestion } from '../../services/profileService';
 
@@ -82,6 +79,9 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
         </div>
 
         <button
+          type="button"
+          aria-expanded={isOpen}
+          aria-controls="nl-profile-form"
           onClick={() => setIsOpen(!isOpen)}
           className="self-start sm:self-auto text-xs font-semibold text-vayu-800 hover:text-vayu-900 underline"
         >
@@ -90,11 +90,11 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
       </div>
 
       {isOpen && (
-        <form onSubmit={handleExtract} className="space-y-3 pt-2">
+        <form id="nl-profile-form" onSubmit={handleExtract} className="space-y-3 pt-2">
           {/* Quick-fill sample chips */}
           <div className="space-y-1.5">
             <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-vayu-600" />
+              <Sparkles className="w-3 h-3 text-vayu-600" aria-hidden="true" />
               Try a sample household:
             </span>
             <div className="flex flex-wrap gap-1.5">
@@ -114,7 +114,11 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
 
           {/* Textarea */}
           <div className="relative">
+            <label htmlFor="nl-profile-textarea" className="sr-only">
+              Household description in natural language
+            </label>
             <textarea
+              id="nl-profile-textarea"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -124,8 +128,8 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
           </div>
 
           {parseError && (
-            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div role="alert" className="flex items-center gap-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800">
+              <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span>{parseError}</span>
             </div>
           )}

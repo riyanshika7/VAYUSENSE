@@ -1,6 +1,5 @@
 """Deterministic exposure risk calculation engine for VayuSense."""
 
-from datetime import datetime
 from typing import List, Optional, Tuple
 
 from app.models.aqi import AQIResponse

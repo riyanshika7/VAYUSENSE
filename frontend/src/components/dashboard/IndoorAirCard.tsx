@@ -5,7 +5,6 @@ import {
   Sparkles,
   Ban,
   Shield,
-  Activity,
   Home,
 } from 'lucide-react';
 import { IndoorAirActions, ExplainableAction } from '../../types/recommendation';

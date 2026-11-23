@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   ShieldCheck,
   ArrowRight,
-  ArrowDown,
 } from 'lucide-react';
 import { CausalChain } from '../../types/recommendation';
 
@@ -82,20 +81,20 @@ export const CausalChainVisualizer: React.FC<CausalChainVisualizerProps> = ({ ca
       </div>
 
       {/* Responsive timeline grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-2.5 relative">
+      <ol aria-label="Causal reasoning chain" className="grid grid-cols-1 lg:grid-cols-5 gap-2.5 relative list-none pl-0">
         {steps.map((step, idx) => {
           const Icon = step.icon;
           const isLast = idx === steps.length - 1;
 
           return (
             <React.Fragment key={idx}>
-              <div
+              <li
                 className={`rounded-xl p-3 border ${step.color} ${step.accent} flex flex-col justify-between shadow-xs transition-all`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5">
-                      <Icon className="w-3.5 h-3.5 shrink-0" />
+                      <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       {step.title}
                     </span>
                     <span
@@ -108,19 +107,22 @@ export const CausalChainVisualizer: React.FC<CausalChainVisualizerProps> = ({ ca
                     {step.content}
                   </p>
                 </div>
-              </div>
+              </li>
 
               {/* Arrow connector between steps (desktop) */}
               {!isLast && (
-                <div className="hidden lg:flex items-center justify-center absolute z-10 pointer-events-none"
-                     style={{ left: `calc(${(idx + 1) * 20}% - 8px)`, top: '42%' }}>
+                <div
+                  aria-hidden="true"
+                  className="hidden lg:flex items-center justify-center absolute z-10 pointer-events-none"
+                  style={{ left: `calc(${(idx + 1) * 20}% - 8px)`, top: '42%' }}
+                >
                   <ArrowRight className="w-4 h-4 text-slate-400 bg-white rounded-full p-0.5 shadow-xs" />
                 </div>
               )}
             </React.Fragment>
           );
         })}
-      </div>
+      </ol>
     </div>
   );
 };

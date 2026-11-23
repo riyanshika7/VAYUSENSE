@@ -6,4 +6,22 @@
   body {
     @apply antialiased bg-surface-canvas text-ink-primary font-sans;
   }
+
+  /* WCAG 2.2 AA Compliant visible focus indicators for all keyboard-focused interactive elements */
+  :focus-visible {
+    outline: 2px solid #0f766e;
+    outline-offset: 2px;
+  }
+}
+
+/* WCAG 2.2 Motion accessibility: respect user's system preferences for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

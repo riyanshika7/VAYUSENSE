@@ -13,10 +13,6 @@ import {
   Clock,
   Bike,
   Activity,
-  Car,
-  Flame,
-  Sun,
-  Smile,
   AlertTriangle,
 } from 'lucide-react';
 import {
@@ -102,10 +98,11 @@ export const ScheduleEditorCard: React.FC<ScheduleEditorCardProps> = ({
             {/* Primary Mode Dropdown */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label htmlFor="commute-mode-select" className="text-xs font-bold text-slate-700 block mb-1">
                   Primary Commute Mode
                 </label>
                 <select
+                  id="commute-mode-select"
                   value={commute.primary_mode}
                   onChange={(e) =>
                     onChange((prev) => ({
@@ -128,10 +125,12 @@ export const ScheduleEditorCard: React.FC<ScheduleEditorCardProps> = ({
 
               {/* Commute Duration */}
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label htmlFor="commute-duration-range" className="text-xs font-bold text-slate-700 block mb-1">
                   Daily Round-Trip Commute: <strong>{commute.estimated_daily_commute_minutes} minutes</strong>
                 </label>
                 <input
+                  id="commute-duration-range"
+                  aria-label="Daily round-trip commute in minutes"
                   type="range"
                   min="10"
                   max="180"
@@ -206,10 +205,11 @@ export const ScheduleEditorCard: React.FC<ScheduleEditorCardProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
             {/* Preferred Time Window */}
             <div className="sm:col-span-2">
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label htmlFor="exercise-time-select" className="text-xs font-bold text-slate-700 block mb-1">
                 Preferred Exercise Time
               </label>
               <select
+                id="exercise-time-select"
                 value={exercise.time_of_day}
                 onChange={(e) =>
                   onChange((prev) => ({
@@ -232,10 +232,11 @@ export const ScheduleEditorCard: React.FC<ScheduleEditorCardProps> = ({
 
             {/* Exercise Intensity */}
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
+              <label htmlFor="exercise-intensity-select" className="text-xs font-bold text-slate-700 block mb-1">
                 Intensity Level
               </label>
               <select
+                id="exercise-intensity-select"
                 value={exercise.intensity}
                 onChange={(e) =>
                   onChange((prev) => ({
@@ -264,15 +265,17 @@ export const ScheduleEditorCard: React.FC<ScheduleEditorCardProps> = ({
       {/* ── 3. Children's Outdoor Play ── */}
       {profile.children_ages.length > 0 && (
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-between">
-          <div>
+          <label htmlFor="child-play-checkbox" className="cursor-pointer flex-1">
             <span className="text-xs font-bold text-slate-800 block">
               Children's After-School Outdoor Play (16:30 – 18:30)
             </span>
             <span className="text-[11px] text-slate-500 block">
               Late afternoon is when evening smog begins accumulating in North Indian cities.
             </span>
-          </div>
+          </label>
           <input
+            id="child-play-checkbox"
+            aria-label="Consider children's after-school outdoor play"
             type="checkbox"
             checked={profile.has_outdoor_child_play}
             onChange={(e) =>

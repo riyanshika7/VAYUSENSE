@@ -14,6 +14,11 @@ from app.routers.ai import router as ai_router
 from app.routers.aqi import router as aqi_router
 from app.routers.profile import router as profile_router
 from app.routers.recommendations import router as recommendations_router
+from app.security import (
+    InMemoryRateLimiter,
+    RequestSizeLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -54,13 +59,22 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Configure CORS for local and web frontends
+    # 1. Defensive HTTP security headers
+    app.add_middleware(SecurityHeadersMiddleware)
+
+    # 2. Maximum request body limit (1 MB) to prevent DoS
+    app.add_middleware(RequestSizeLimitMiddleware, max_bytes=1_048_576)
+
+    # 3. Sliding-window rate limiter
+    app.add_middleware(InMemoryRateLimiter)
+
+    # 4. Strict CORS configuration
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "OPTIONS", "HEAD"],
+        allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
     )
 
     # Include routers

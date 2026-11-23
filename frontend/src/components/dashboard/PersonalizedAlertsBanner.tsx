@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, AlertCircle, Bell } from 'lucide-react';
+import { AlertTriangle, AlertCircle } from 'lucide-react';
 import { PersonalizedAlert } from '../../types/recommendation';
 
 interface PersonalizedAlertsBannerProps {
@@ -10,12 +10,13 @@ export const PersonalizedAlertsBanner: React.FC<PersonalizedAlertsBannerProps> =
   if (!alerts || alerts.length === 0) return null;
 
   return (
-    <div className="space-y-2 mb-6">
+    <div className="space-y-2 mb-6" role="region" aria-label="Personalized Health Alerts">
       {alerts.map((alert, idx) => {
         const isWarning = alert.alert_level.toLowerCase() === 'warning';
         return (
           <div
             key={idx}
+            role="alert"
             className={`rounded-xl p-3.5 border flex items-start gap-3 transition-all ${
               isWarning
                 ? 'bg-rose-50/80 border-rose-200 text-rose-950'

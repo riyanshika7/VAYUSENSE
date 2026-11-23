@@ -19,11 +19,8 @@ import {
   ChevronUp,
   Clock,
   User,
-  ShieldAlert,
   AlertCircle,
   Check,
-  CheckCircle2,
-  HelpCircle,
   FileCode2,
 } from 'lucide-react';
 import { RuleRecommendation } from '../../types/recommendation';
@@ -105,6 +102,9 @@ export const ExplainableRecommendationCard: React.FC<ExplainableRecommendationCa
             {onToggleComplete && (
               <button
                 type="button"
+                role="checkbox"
+                aria-checked={isCompleted}
+                aria-label={`Mark "${recommendation.action}" as ${isCompleted ? 'pending' : 'completed'}`}
                 onClick={onToggleComplete}
                 className={`mt-0.5 w-5 h-5 rounded-md flex items-center justify-center border transition-all shrink-0 ${
                   isCompleted
@@ -113,7 +113,7 @@ export const ExplainableRecommendationCard: React.FC<ExplainableRecommendationCa
                 }`}
                 title={isCompleted ? 'Mark as pending' : 'Mark as completed today'}
               >
-                {isCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                {isCompleted && <Check className="w-3.5 h-3.5 stroke-[3]" aria-hidden="true" />}
               </button>
             )}
 
@@ -151,11 +151,13 @@ export const ExplainableRecommendationCard: React.FC<ExplainableRecommendationCa
           {/* Expand "Why this?" toggle button */}
           <button
             type="button"
+            aria-expanded={isExpanded}
+            aria-label={`${isExpanded ? 'Hide' : 'Show'} explanation for "${recommendation.action}"`}
             onClick={() => setIsExpanded(!isExpanded)}
             className="flex items-center gap-1 text-xs font-semibold text-vayu-700 hover:text-vayu-900 bg-vayu-50 hover:bg-vayu-100/80 px-2.5 py-1.5 rounded-xl border border-vayu-200 transition-colors shrink-0"
           >
             <span>{isExpanded ? 'Hide' : 'Why this?'}</span>
-            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" aria-hidden="true" /> : <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />}
           </button>
         </div>
 

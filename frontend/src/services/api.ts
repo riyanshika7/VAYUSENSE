@@ -8,10 +8,17 @@ import { AIPersonalizedPlan, RecommendationResponse } from '../types/recommendat
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
+async function parseResponse<T>(res: Response, fallbackAction: string): Promise<T> {
+  if (!res.ok) {
+    const errorData = (await res.json().catch(() => ({}))) as { detail?: string };
+    throw new Error(errorData.detail || `${fallbackAction}: HTTP ${res.status}`);
+  }
+  return res.json() as Promise<T>;
+}
+
 export async function fetchHealth(): Promise<{ status: string; provider_token_configured: boolean; gemini_configured: boolean }> {
   const res = await fetch(`${API_BASE_URL}/health`);
-  if (!res.ok) throw new Error(`Health check failed: HTTP ${res.status}`);
-  return res.json();
+  return parseResponse(res, 'Health check failed');
 }
 
 export async function fetchLiveAQI(location?: string, lat?: number, lon?: number): Promise<AQIResponse> {
@@ -26,26 +33,17 @@ export async function fetchLiveAQI(location?: string, lat?: number, lon?: number
   }
 
   const res = await fetch(`${API_BASE_URL}/api/aqi?${params.toString()}`);
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.detail || `Failed to fetch live AQI: HTTP ${res.status}`);
-  }
-  return res.json();
+  return parseResponse<AQIResponse>(res, 'Failed to fetch live AQI');
 }
 
 export async function searchLocations(query: string): Promise<AQISearchResponse> {
   const res = await fetch(`${API_BASE_URL}/api/aqi/search?q=${encodeURIComponent(query)}`);
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.detail || `Location search failed: HTTP ${res.status}`);
-  }
-  return res.json();
+  return parseResponse<AQISearchResponse>(res, 'Location search failed');
 }
 
 export async function fetchPresets(): Promise<Record<string, HouseholdProfile>> {
   const res = await fetch(`${API_BASE_URL}/api/profile/presets`);
-  if (!res.ok) throw new Error(`Failed to fetch presets: HTTP ${res.status}`);
-  return res.json();
+  return parseResponse<Record<string, HouseholdProfile>>(res, 'Failed to fetch presets');
 }
 
 export async function fetchAIPlan(payload: {
@@ -59,12 +57,7 @@ export async function fetchAIPlan(payload: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.detail || `Failed to generate AI plan: HTTP ${res.status}`);
-  }
-  return res.json();
+  return parseResponse<AIPersonalizedPlan>(res, 'Failed to generate AI plan');
 }
 
 export async function fetchRuleRecommendations(payload: {
@@ -78,10 +71,5 @@ export async function fetchRuleRecommendations(payload: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.detail || `Failed to fetch deterministic recommendations: HTTP ${res.status}`);
-  }
-  return res.json();
+  return parseResponse<RecommendationResponse>(res, 'Failed to fetch deterministic recommendations');
 }

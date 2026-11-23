@@ -32,6 +32,47 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose,
   isBackendConnected,
 }) => {
+  const sidebarRef = React.useRef<HTMLElement>(null);
+  const closeBtnRef = React.useRef<HTMLButtonElement>(null);
+
+  // Close on Escape key press, auto-focus close button, trap Tab navigation when open on mobile
+  React.useEffect(() => {
+    if (!isOpen) return;
+    closeBtnRef.current?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        document.getElementById('mobile-menu-trigger')?.focus();
+        return;
+      }
+
+      if (e.key === 'Tab' && sidebarRef.current) {
+        const focusables = sidebarRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const navItems: { id: NavigationTab; label: string; icon: React.ReactNode; desc: string }[] = [
     {
       id: 'overview',
@@ -70,6 +111,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile Backdrop */}
       {isOpen && (
         <div
+          role="presentation"
+          aria-hidden="true"
           className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
           onClick={onClose}
         />
@@ -77,6 +120,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar Container */}
       <aside
+        ref={sidebarRef}
+        role={isOpen ? 'dialog' : undefined}
+        aria-modal={isOpen ? 'true' : undefined}
+        aria-label={isOpen ? 'Navigation Menu' : 'Sidebar Navigation'}
         className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
@@ -98,15 +145,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
           <button
-            onClick={onClose}
+            ref={closeBtnRef}
+            type="button"
+            onClick={() => {
+              onClose();
+              document.getElementById('mobile-menu-trigger')?.focus();
+            }}
+            aria-label="Close navigation menu"
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 lg:hidden"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Navigation Menu */}
-        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+        <nav aria-label="Main Navigation" className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
           <p className="px-3 text-[11px] font-semibold uppercase text-slate-400 tracking-wider mb-2">
             Navigation
           </p>
@@ -114,11 +167,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             const isActive = currentTab === item.id;
             return (
               <button
+                type="button"
                 key={item.id}
                 onClick={() => {
                   onTabChange(item.id);
                   onClose();
                 }}
+                aria-current={isActive ? 'page' : undefined}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
                   isActive
                     ? 'bg-slate-900 text-white shadow-sm font-medium'

@@ -9,7 +9,6 @@
 
 import React from 'react';
 import { Briefcase, Baby, HeartPulse, Check, Sparkles } from 'lucide-react';
-import { PRESET_META } from '../../services/profileService';
 
 interface PresetSelectorProps {
   activePresetId: string;
@@ -74,13 +73,39 @@ export const PresetSelector: React.FC<PresetSelectorProps> = ({
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {PRESET_CARDS.map((preset) => {
+      <div role="radiogroup" aria-label="Selectable household demo personas" className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {PRESET_CARDS.map((preset, idx) => {
           const Icon = preset.icon;
           const isSelected = activePresetId === preset.id;
 
+          const handleKeyDown = (e: React.KeyboardEvent) => {
+            let nextIndex = idx;
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              nextIndex = (idx + 1) % PRESET_CARDS.length;
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              nextIndex = (idx - 1 + PRESET_CARDS.length) % PRESET_CARDS.length;
+            } else if (e.key === ' ' || e.key === 'Enter') {
+              e.preventDefault();
+              onSelectPreset(preset.id);
+              return;
+            } else {
+              return;
+            }
+            const nextPreset = PRESET_CARDS[nextIndex];
+            onSelectPreset(nextPreset.id);
+            document.getElementById(`preset-radio-${nextPreset.id}`)?.focus();
+          };
+
           return (
             <button
+              id={`preset-radio-${preset.id}`}
+              type="button"
+              role="radio"
+              aria-checked={isSelected}
+              tabIndex={isSelected ? 0 : -1}
+              onKeyDown={handleKeyDown}
               key={preset.id}
               onClick={() => onSelectPreset(preset.id)}
               className={`relative rounded-2xl p-4 text-left border transition-all flex flex-col justify-between ${

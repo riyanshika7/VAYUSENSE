@@ -4,16 +4,11 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.config import Settings, get_settings
+from app.dependencies import get_waqi_service
 from app.models.aqi import AQIResponse, AQISearchResponse
 from app.services.waqi_service import WAQIService
 
 router = APIRouter(prefix="/api/aqi", tags=["Air Quality Index"])
-
-
-def get_waqi_service(settings: Settings = Depends(get_settings)) -> WAQIService:
-    """Dependency provider for WAQIService."""
-    return WAQIService(settings=settings)
 
 
 @router.get(
@@ -26,6 +21,7 @@ async def search_stations(
     q: str = Query(
         ...,
         min_length=1,
+        max_length=100,
         description="Location name or keyword to search (e.g. 'Delhi', 'Bengaluru', 'Mumbai', 'Connaught Place')",
         examples=["delhi", "bengaluru", "mumbai"],
     ),
@@ -54,6 +50,7 @@ async def search_stations(
 async def get_aqi(
     location: Optional[str] = Query(
         None,
+        max_length=100,
         description="City or station name (e.g., 'delhi', 'mumbai', 'kolkata') or station ID prefixed with '@' (e.g. '@7024')",
     ),
     lat: Optional[float] = Query(

@@ -8,10 +8,8 @@ import {
   ChevronDown,
   ChevronUp,
   AlertCircle,
-  HelpCircle,
   Sparkles,
   User,
-  Shield,
 } from 'lucide-react';
 import { TodayRoutine, ExplainableAction } from '../../types/recommendation';
 import { Badge } from '../common/Badge';
@@ -70,12 +68,41 @@ export const RecommendedActionsCard: React.FC<RecommendedActionsCardProps> = ({
       </div>
 
       {/* Time-of-Day Tabs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-        {tabs.map((tab) => {
+      <div role="tablist" aria-label="Action timeline periods" className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+        {tabs.map((tab, idx) => {
           const isActive = activeTab === tab.id;
+          const handleTabKeyDown = (e: React.KeyboardEvent) => {
+            let nextIndex = idx;
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              nextIndex = (idx + 1) % tabs.length;
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              nextIndex = (idx - 1 + tabs.length) % tabs.length;
+            } else if (e.key === 'Home') {
+              e.preventDefault();
+              nextIndex = 0;
+            } else if (e.key === 'End') {
+              e.preventDefault();
+              nextIndex = tabs.length - 1;
+            } else {
+              return;
+            }
+            const nextTab = tabs[nextIndex];
+            setActiveTab(nextTab.id);
+            setExpandedIndex(0);
+            document.getElementById(`actions-tab-${nextTab.id}`)?.focus();
+          };
+
           return (
             <button
+              id={`actions-tab-${tab.id}`}
               key={tab.id}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls="actions-tabpanel"
+              tabIndex={isActive ? 0 : -1}
+              onKeyDown={handleTabKeyDown}
               onClick={() => {
                 setActiveTab(tab.id);
                 setExpandedIndex(0);
@@ -100,12 +127,12 @@ export const RecommendedActionsCard: React.FC<RecommendedActionsCardProps> = ({
 
       {/* Segment Summary */}
       <div className="p-3 rounded-xl bg-vayu-50/50 border border-vayu-100 text-xs text-vayu-950 font-medium mb-4 flex items-center gap-2">
-        <Clock className="w-4 h-4 text-vayu-700 shrink-0" />
+        <Clock className="w-4 h-4 text-vayu-700 shrink-0" aria-hidden="true" />
         <span>{currentSegment.summary}</span>
       </div>
 
       {/* Actions Accordion with Category D Explainability */}
-      <div className="space-y-3">
+      <div id="actions-tabpanel" role="tabpanel" aria-labelledby={`actions-tab-${activeTab}`} className="space-y-3">
         {currentSegment.actions.map((act: ExplainableAction, idx: number) => {
           const isExpanded = expandedIndex === idx;
           const priorityVariant = {
@@ -125,9 +152,12 @@ export const RecommendedActionsCard: React.FC<RecommendedActionsCardProps> = ({
               }`}
             >
               {/* Action Title Header */}
-              <div
+              <button
+                type="button"
+                aria-expanded={isExpanded}
+                aria-controls={`action-explanation-${idx}`}
                 onClick={() => setExpandedIndex(isExpanded ? null : idx)}
-                className="p-4 cursor-pointer flex items-start justify-between gap-3"
+                className="w-full text-left p-4 cursor-pointer flex items-start justify-between gap-3 focus-visible:ring-2 focus-visible:ring-vayu-600 rounded-xl"
               >
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -135,11 +165,11 @@ export const RecommendedActionsCard: React.FC<RecommendedActionsCardProps> = ({
                       {act.priority}
                     </Badge>
                     <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
+                      <Clock className="w-3 h-3" aria-hidden="true" />
                       {act.timing}
                     </span>
                     <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <User className="w-3 h-3 text-slate-400" />
+                      <User className="w-3 h-3 text-slate-400" aria-hidden="true" />
                       {act.beneficiary}
                     </span>
                   </div>
@@ -148,14 +178,14 @@ export const RecommendedActionsCard: React.FC<RecommendedActionsCardProps> = ({
                   </h4>
                 </div>
 
-                <button className="text-slate-400 hover:text-slate-600 p-1">
+                <span className="text-slate-400 p-1" aria-hidden="true">
                   {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </button>
-              </div>
+                </span>
+              </button>
 
               {/* Explainability Breakdown (Category D + Phase 5 Causal Chain) */}
               {isExpanded && (
-                <div className="px-4 pb-4 pt-1 border-t border-slate-100 text-xs space-y-3">
+                <div id={`action-explanation-${idx}`} className="px-4 pb-4 pt-1 border-t border-slate-100 text-xs space-y-3">
                   {/* Causal Chain Flow */}
                   <CausalChainVisualizer
                     causalChain={{

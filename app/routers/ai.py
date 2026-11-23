@@ -5,10 +5,10 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
-from app.config import Settings, get_settings
+from app.dependencies import get_ai_service, get_waqi_service
 from app.models.ai_response import AIPersonalizedPlan, AIPlanRequest
 from app.models.aqi import AQIResponse
-from app.models.profile import SAMPLE_PRESETS, HouseholdProfile
+from app.models.profile import SAMPLE_PRESETS
 from app.services.ai_service import AIService, ParsedProfileFields
 from app.services.recommendation_rules import RecommendationRulesEngine
 from app.services.risk_engine import RiskEngine
@@ -34,16 +34,6 @@ class ParseProfileResponse(BaseModel):
     requires_confirmation: bool = True
     gemini_used: bool
     message: str
-
-
-def get_waqi_service(settings: Settings = Depends(get_settings)) -> WAQIService:
-    """Dependency provider for WAQIService."""
-    return WAQIService(settings=settings)
-
-
-def get_ai_service(settings: Settings = Depends(get_settings)) -> AIService:
-    """Dependency provider for AIService."""
-    return AIService(settings=settings)
 
 
 @router.post(
@@ -121,7 +111,6 @@ async def generate_ai_plan(
 async def parse_profile_from_description(
     request: ParseProfileRequest,
     ai_service: AIService = Depends(get_ai_service),
-    settings: Settings = Depends(get_settings),
 ) -> ParseProfileResponse:
     """Extract profile fields from a natural-language household description."""
     suggested = await ai_service.parse_profile_description(request.description)

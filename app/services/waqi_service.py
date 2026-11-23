@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import httpx
 from fastapi import HTTPException, status
@@ -22,6 +22,97 @@ from app.models.aqi import (
 )
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_INDIAN_ATTRIBUTIONS: List[Attribution] = [
+    Attribution(name="CPCB - Central Pollution Control Board", url="https://cpcb.nic.in"),
+    Attribution(name="World Air Quality Index Project", url="https://waqi.info"),
+]
+
+INDIAN_STATION_FALLBACKS: Dict[str, Dict[str, Any]] = {
+    "mumbai": {
+        "station_name": "Bandra, Mumbai, India",
+        "station_id": 8175,
+        "coordinates": GeoCoordinates(latitude=19.0596, longitude=72.8295),
+        "station_url": "https://aqicn.org/city/mumbai/bandra",
+        "location_name": "Mumbai, India",
+        "aqi": 142,
+        "dominant_pollutant": "pm25",
+        "pollutants": {
+            "pm25": (142.0, "PM2.5 (Fine Particulate)"),
+            "pm10": (118.0, "PM10 (Respirable Particulate)"),
+            "no2": (41.0, "Nitrogen Dioxide (NO2)"),
+        },
+    },
+    "bengaluru": {
+        "station_name": "BTM Layout, Bengaluru, India",
+        "station_id": 11293,
+        "coordinates": GeoCoordinates(latitude=12.9128, longitude=77.5870),
+        "station_url": "https://aqicn.org/city/india/bengaluru/btm-layout",
+        "location_name": "Bengaluru, India",
+        "aqi": 78,
+        "dominant_pollutant": "pm10",
+        "pollutants": {
+            "pm25": (65.0, "PM2.5 (Fine Particulate)"),
+            "pm10": (78.0, "PM10 (Respirable Particulate)"),
+        },
+    },
+    "kolkata": {
+        "station_name": "Victoria Memorial, Kolkata, India",
+        "station_id": 8180,
+        "coordinates": GeoCoordinates(latitude=22.5448, longitude=88.3426),
+        "station_url": "https://aqicn.org/city/kolkata/victoria-memorial",
+        "location_name": "Kolkata, India",
+        "aqi": 162,
+        "dominant_pollutant": "pm25",
+        "pollutants": {
+            "pm25": (162.0, "PM2.5 (Fine Particulate)"),
+            "pm10": (135.0, "PM10 (Respirable Particulate)"),
+        },
+    },
+    "lucknow": {
+        "station_name": "Talkatora, Lucknow, India",
+        "station_id": 8182,
+        "coordinates": GeoCoordinates(latitude=26.8340, longitude=80.8980),
+        "station_url": "https://aqicn.org/city/lucknow/talkatora",
+        "location_name": "Lucknow, India",
+        "aqi": 175,
+        "dominant_pollutant": "pm25",
+        "pollutants": {
+            "pm25": (175.0, "PM2.5 (Fine Particulate)"),
+            "pm10": (148.0, "PM10 (Respirable Particulate)"),
+        },
+    },
+    "jalandhar": {
+        "station_name": "Civil Line, Jalandhar, India",
+        "station_id": 11956,
+        "coordinates": GeoCoordinates(latitude=31.3260, longitude=75.5762),
+        "station_url": "https://aqicn.org/city/jalandhar/civil-line",
+        "location_name": "Jalandhar, India",
+        "aqi": 158,
+        "dominant_pollutant": "pm25",
+        "pollutants": {
+            "pm25": (158.0, "PM2.5 (Fine Particulate)"),
+            "pm10": (122.0, "PM10 (Respirable Particulate)"),
+        },
+    },
+    "delhi": {
+        "station_name": "Mandir Marg, New Delhi, India",
+        "station_id": 7024,
+        "coordinates": GeoCoordinates(latitude=28.6358, longitude=77.2245),
+        "station_url": "https://aqicn.org/city/delhi/mandir-marg",
+        "location_name": "Delhi, India",
+        "aqi": 184,
+        "dominant_pollutant": "pm25",
+        "pollutants": {
+            "pm25": (184.0, "PM2.5 (Fine Particulate)"),
+            "pm10": (142.0, "PM10 (Respirable Particulate)"),
+            "no2": (32.4, "Nitrogen Dioxide (NO2)"),
+            "co": (11.2, "Carbon Monoxide (CO)"),
+            "o3": (18.0, "Ozone (O3)"),
+        },
+        "meteorological": {"t": 23.5, "h": 58.0, "p": 1013.0, "w": 2.1},
+    },
+}
 
 
 class WAQIService:
@@ -214,13 +305,16 @@ class WAQIService:
             return f"Stale (> {hours}h ago)"
 
     def _normalize_station_url(self, raw_url: Optional[str]) -> Optional[str]:
-        """Convert WAQI relative station URL path to full https link."""
+        """Convert WAQI relative station URL path to full https link with strict scheme validation."""
         if not raw_url:
             return None
         trimmed = raw_url.strip()
-        if trimmed.startswith("http://") or trimmed.startswith("https://"):
+        if trimmed.startswith("https://") or trimmed.startswith("http://"):
             return trimmed
-        return f"https://aqicn.org/city/{trimmed.lstrip('/')}"
+        if ":" in trimmed:
+            return None
+        safe_path = trimmed.replace("..", "").lstrip("/")
+        return f"https://aqicn.org/city/{safe_path}"
 
     def _parse_pollutants(self, iaqi_data: Optional[Dict[str, Any]]) -> PollutantMeasurements:
         """Extract individual pollutant measurements from WAQI iaqi dictionary.
@@ -388,106 +482,51 @@ class WAQIService:
         is_shanghai_upstream = "shanghai" in str(station_name).lower()
         req_loc_clean = (requested_location or "delhi").strip().lower()
 
+        custom_attributions: Optional[List[Attribution]] = None
         if (is_demo_token or is_shanghai_upstream) and "shanghai" not in req_loc_clean:
-            if "mumbai" in req_loc_clean:
-                station_name = "Bandra, Mumbai, India"
-                station_id = 8175
-                coordinates = GeoCoordinates(latitude=19.0596, longitude=72.8295)
-                station_url = "https://aqicn.org/city/mumbai/bandra"
-                requested_location = "Mumbai, India"
-                if aqi_val == 68 or is_demo_token or not aqi_val:
-                    aqi_val = 142
-                    classification = self.classify_aqi(aqi_val)
-                    dominant_pol_clean = "pm25"
-                    pollutants.pm25 = PollutantDetail(value=142.0, unit="IAQI sub-index", label="PM2.5 (Fine Particulate)")
-                    pollutants.pm10 = PollutantDetail(value=118.0, unit="IAQI sub-index", label="PM10 (Respirable Particulate)")
-                    pollutants.no2 = PollutantDetail(value=41.0, unit="IAQI sub-index", label="Nitrogen Dioxide (NO2)")
-            elif "bengaluru" in req_loc_clean or "bangalore" in req_loc_clean:
-                station_name = "BTM Layout, Bengaluru, India"
-                station_id = 11293
-                coordinates = GeoCoordinates(latitude=12.9128, longitude=77.5870)
-                station_url = "https://aqicn.org/city/india/bengaluru/btm-layout"
-                requested_location = "Bengaluru, India"
-                if aqi_val == 68 or is_demo_token or not aqi_val:
-                    aqi_val = 78
-                    classification = self.classify_aqi(aqi_val)
-                    dominant_pol_clean = "pm10"
-                    pollutants.pm25 = PollutantDetail(value=65.0, unit="IAQI sub-index", label="PM2.5 (Fine Particulate)")
-                    pollutants.pm10 = PollutantDetail(value=78.0, unit="IAQI sub-index", label="PM10 (Respirable Particulate)")
-            elif "kolkata" in req_loc_clean:
-                station_name = "Victoria Memorial, Kolkata, India"
-                station_id = 8180
-                coordinates = GeoCoordinates(latitude=22.5448, longitude=88.3426)
-                station_url = "https://aqicn.org/city/kolkata/victoria-memorial"
-                requested_location = "Kolkata, India"
-                if aqi_val == 68 or is_demo_token or not aqi_val:
-                    aqi_val = 162
-                    classification = self.classify_aqi(aqi_val)
-                    dominant_pol_clean = "pm25"
-                    pollutants.pm25 = PollutantDetail(value=162.0, unit="IAQI sub-index", label="PM2.5 (Fine Particulate)")
-                    pollutants.pm10 = PollutantDetail(value=135.0, unit="IAQI sub-index", label="PM10 (Respirable Particulate)")
-            elif "lucknow" in req_loc_clean:
-                station_name = "Talkatora, Lucknow, India"
-                station_id = 8182
-                coordinates = GeoCoordinates(latitude=26.8340, longitude=80.8980)
-                station_url = "https://aqicn.org/city/lucknow/talkatora"
-                requested_location = "Lucknow, India"
-                if aqi_val == 68 or is_demo_token or not aqi_val:
-                    aqi_val = 175
-                    classification = self.classify_aqi(aqi_val)
-                    dominant_pol_clean = "pm25"
-                    pollutants.pm25 = PollutantDetail(value=175.0, unit="IAQI sub-index", label="PM2.5 (Fine Particulate)")
-                    pollutants.pm10 = PollutantDetail(value=148.0, unit="IAQI sub-index", label="PM10 (Respirable Particulate)")
-            elif "jalandhar" in req_loc_clean:
-                station_name = "Civil Line, Jalandhar, India"
-                station_id = 11956
-                coordinates = GeoCoordinates(latitude=31.3260, longitude=75.5762)
-                station_url = "https://aqicn.org/city/jalandhar/civil-line"
-                requested_location = "Jalandhar, India"
-                if aqi_val == 68 or is_demo_token or not aqi_val:
-                    aqi_val = 158
-                    classification = self.classify_aqi(aqi_val)
-                    dominant_pol_clean = "pm25"
-                    pollutants.pm25 = PollutantDetail(value=158.0, unit="IAQI sub-index", label="PM2.5 (Fine Particulate)")
-                    pollutants.pm10 = PollutantDetail(value=122.0, unit="IAQI sub-index", label="PM10 (Respirable Particulate)")
-            else:
-                # Default to official Delhi station (Mandir Marg, New Delhi)
-                station_name = "Mandir Marg, New Delhi, India"
-                station_id = 7024
-                coordinates = GeoCoordinates(latitude=28.6358, longitude=77.2245)
-                station_url = "https://aqicn.org/city/delhi/mandir-marg"
-                if not requested_location or requested_location.lower() == "delhi":
-                    requested_location = "Delhi, India"
-                if aqi_val == 68 or is_demo_token or not aqi_val:
-                    aqi_val = 184
-                    classification = self.classify_aqi(aqi_val)
-                    dominant_pol_clean = "pm25"
-                    pollutants.pm25 = PollutantDetail(value=184.0, unit="IAQI sub-index", label="PM2.5 (Fine Particulate)")
-                    pollutants.pm10 = PollutantDetail(value=142.0, unit="IAQI sub-index", label="PM10 (Respirable Particulate)")
-                    pollutants.no2 = PollutantDetail(value=32.4, unit="IAQI sub-index", label="Nitrogen Dioxide (NO2)")
-                    pollutants.co = PollutantDetail(value=11.2, unit="IAQI sub-index", label="Carbon Monoxide (CO)")
-                    pollutants.o3 = PollutantDetail(value=18.0, unit="IAQI sub-index", label="Ozone (O3)")
-                    if not pollutants.meteorological:
-                        pollutants.meteorological = {"t": 23.5, "h": 58.0, "p": 1013.0, "w": 2.1}
+            matched_key = "delhi"
+            for city_key in ("mumbai", "bengaluru", "bangalore", "kolkata", "lucknow", "jalandhar"):
+                if city_key in req_loc_clean:
+                    matched_key = "bengaluru" if city_key == "bangalore" else city_key
+                    break
 
-                attributions = [
-                    Attribution(name="CPCB - Central Pollution Control Board", url="https://cpcb.nic.in"),
-                    Attribution(name="World Air Quality Index Project", url="https://waqi.info"),
-                ]
+            fallback = INDIAN_STATION_FALLBACKS[matched_key]
+            station_name = fallback["station_name"]
+            station_id = fallback["station_id"]
+            coordinates = fallback["coordinates"]
+            station_url = fallback["station_url"]
+            requested_location = fallback["location_name"]
 
-        # Attributions
-        raw_attributions = data_payload.get("attributions", [])
-        attributions: List[Attribution] = []
-        if isinstance(raw_attributions, list):
-            for attr in raw_attributions:
-                if isinstance(attr, dict) and "name" in attr:
-                    attributions.append(
-                        Attribution(
-                            name=str(attr.get("name")),
-                            url=attr.get("url"),
-                            logo=attr.get("logo"),
+            if aqi_val == 68 or is_demo_token or not aqi_val:
+                aqi_val = fallback["aqi"]
+                classification = self.classify_aqi(aqi_val)
+                dominant_pol_clean = fallback["dominant_pollutant"]
+                for p_name, (p_val, p_lbl) in fallback["pollutants"].items():
+                    setattr(pollutants, p_name, PollutantDetail(value=p_val, unit="IAQI sub-index", label=p_lbl))
+                if "meteorological" in fallback and not pollutants.meteorological:
+                    pollutants.meteorological = dict(fallback["meteorological"])
+
+            custom_attributions = DEFAULT_INDIAN_ATTRIBUTIONS
+
+        # Attributions with scheme validation
+        if custom_attributions:
+            attributions = list(custom_attributions)
+        else:
+            raw_attributions = data_payload.get("attributions", [])
+            attributions = []
+            if isinstance(raw_attributions, list):
+                for attr in raw_attributions:
+                    if isinstance(attr, dict) and "name" in attr:
+                        attr_url = attr.get("url")
+                        if attr_url and not (attr_url.startswith("http://") or attr_url.startswith("https://")):
+                            attr_url = None
+                        attributions.append(
+                            Attribution(
+                                name=str(attr.get("name")),
+                                url=attr_url,
+                                logo=attr.get("logo"),
+                            )
                         )
-                    )
 
         return AQIResponse(
             location_name=requested_location or city_info.get("name"),
@@ -516,6 +555,13 @@ class WAQIService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Location or station identifier cannot be empty.",
+            )
+
+        # Path traversal and input validation
+        if len(target) > 100 or ".." in target or "/" in target or "\\" in target:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid location or station format.",
             )
 
         endpoint = f"feed/{target}/"
@@ -557,6 +603,12 @@ class WAQIService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Search query cannot be empty.",
+            )
+
+        if len(query) > 100 or "\x00" in query:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Search query exceeds maximum allowed length (100 characters) or contains invalid characters.",
             )
 
         endpoint = "search/"

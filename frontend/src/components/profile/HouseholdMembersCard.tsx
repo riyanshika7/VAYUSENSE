@@ -15,11 +15,6 @@ import {
   Users,
   Plus,
   X,
-  AlertTriangle,
-  Heart,
-  Activity,
-  Shield,
-  HelpCircle,
 } from 'lucide-react';
 import { HouseholdProfile } from '../../types/profile';
 
@@ -84,6 +79,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
           <div className="flex items-center gap-3">
             <button
               type="button"
+              aria-label="Decrease adult count"
               onClick={() =>
                 onChange((prev) => ({
                   ...prev,
@@ -99,6 +95,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
             </span>
             <button
               type="button"
+              aria-label="Increase adult count"
               onClick={() =>
                 onChange((prev) => ({
                   ...prev,
@@ -124,6 +121,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
           <div className="flex items-center gap-3">
             <button
               type="button"
+              aria-label="Decrease seniors count"
               onClick={() =>
                 onChange((prev) => ({
                   ...prev,
@@ -139,6 +137,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
             </span>
             <button
               type="button"
+              aria-label="Increase seniors count"
               onClick={() =>
                 onChange((prev) => ({
                   ...prev,
@@ -162,6 +161,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
           <div className="flex items-center gap-3">
             <button
               type="button"
+              aria-label="Decrease outdoor workers count"
               onClick={() =>
                 onChange((prev) => ({
                   ...prev,
@@ -177,6 +177,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
             </span>
             <button
               type="button"
+              aria-label="Increase outdoor workers count"
               onClick={() =>
                 onChange((prev) => ({
                   ...prev,
@@ -216,6 +217,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
               value={childAgeInput}
               onChange={(e) => setChildAgeInput(e.target.value)}
               placeholder="Age (e.g. 5)"
+              aria-label="Child age in years (0 to 17)"
               className="w-24 text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:border-vayu-600"
             />
             <button
@@ -223,7 +225,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
               disabled={!childAgeInput.trim()}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 disabled:opacity-40"
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" />
               Add Child
             </button>
           </form>
@@ -243,8 +245,9 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
                   onClick={() => handleRemoveChild(idx)}
                   className="hover:text-rose-700 text-amber-700 ml-0.5"
                   title="Remove child"
+                  aria-label={`Remove child aged ${age} years`}
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               </span>
             ))}

@@ -15,7 +15,6 @@ import {
   ArrowRight,
   TrendingUp,
   TrendingDown,
-  Sparkles,
   MapPin,
   Users,
   ShieldAlert,

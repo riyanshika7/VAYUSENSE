@@ -5,9 +5,9 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.config import Settings, get_settings
+from app.dependencies import get_waqi_service
 from app.models.aqi import AQIResponse
-from app.models.profile import SAMPLE_PRESETS, HouseholdProfile
+from app.models.profile import SAMPLE_PRESETS
 from app.models.recommendations import (
     RecommendationResponse,
     RecommendationRuleRequest,
@@ -17,11 +17,6 @@ from app.services.risk_engine import RiskEngine
 from app.services.waqi_service import WAQIService
 
 router = APIRouter(prefix="/api/recommendations", tags=["Exposure Intelligence"])
-
-
-def get_waqi_service(settings: Settings = Depends(get_settings)) -> WAQIService:
-    """Dependency provider for WAQIService."""
-    return WAQIService(settings=settings)
 
 
 @router.post(

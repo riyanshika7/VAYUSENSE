@@ -9,18 +9,11 @@
 
 import React, { useState } from 'react';
 import {
-  Clock,
   Sun,
   Moon,
   Sunset,
   Sunrise,
   Shield,
-  AlertTriangle,
-  CheckCircle2,
-  Activity,
-  Flame,
-  Bike,
-  Home,
 } from 'lucide-react';
 import { RuleRecommendation } from '../../types/recommendation';
 import { HouseholdProfile } from '../../types/profile';
@@ -157,10 +150,12 @@ export const DailyTimelineView: React.FC<DailyTimelineViewProps> = ({
           </p>
         </div>
 
-        {/* Segment filter tabs */}
-        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl self-start sm:self-auto">
+        {/* Segment filter buttons */}
+        <div role="group" aria-label="Filter timeline by time of day" className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl self-start sm:self-auto">
           {(['all', 'morning', 'afternoon', 'evening', 'night'] as const).map((tab) => (
             <button
+              type="button"
+              aria-pressed={activeSegment === tab}
               key={tab}
               onClick={() => setActiveSegment(tab)}
               className={`px-2.5 py-1 text-xs font-bold rounded-lg capitalize transition-colors ${

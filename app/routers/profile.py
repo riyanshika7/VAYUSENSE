@@ -1,16 +1,10 @@
 """Router endpoints for managing household profiles and presets."""
 
 from typing import Dict, Optional
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from app.models.profile import (
-    PRESET_DAILY_COMMUTER,
-    PRESET_FAMILY,
-    PRESET_SENIOR_SENSITIVE,
-    SAMPLE_PRESETS,
-    HouseholdProfile,
-)
+from app.models.profile import SAMPLE_PRESETS, HouseholdProfile
 
 router = APIRouter(prefix="/api/profile", tags=["Household Profiles"])
 

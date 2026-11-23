@@ -24,6 +24,12 @@ from app.services.recommendation_rules import RecommendationRulesEngine
 from app.services.risk_engine import RiskEngine
 
 
+@pytest.fixture(autouse=True)
+def disable_external_gemini_in_unit_tests(monkeypatch):
+    """Ensure unit tests do not attempt real outbound network requests."""
+    monkeypatch.setattr(AIService, "_get_genai_client", lambda self: None)
+
+
 def sample_aqi(aqi: int = 185) -> AQIResponse:
     """Helper creating a sample AQIResponse."""
     return AQIResponse(

@@ -14,8 +14,6 @@ import {
   Flame,
   Fan,
   Sparkles,
-  AlertTriangle,
-  ShieldCheck,
   Home,
 } from 'lucide-react';
 import { HouseholdProfile, VentilationCondition } from '../../types/profile';
@@ -79,12 +77,38 @@ export const IndoorConditionsCard: React.FC<IndoorConditionsCardProps> = ({
           Home Building Envelope & Ventilation Mode
         </label>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {VENTILATION_OPTIONS.map((opt) => {
+        <div role="radiogroup" aria-label="Home building envelope and ventilation mode" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {VENTILATION_OPTIONS.map((opt, idx) => {
             const isSelected = profile.ventilation === opt.id;
+
+            const handleKeyDown = (e: React.KeyboardEvent) => {
+              let nextIndex = idx;
+              if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                nextIndex = (idx + 1) % VENTILATION_OPTIONS.length;
+              } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                nextIndex = (idx - 1 + VENTILATION_OPTIONS.length) % VENTILATION_OPTIONS.length;
+              } else if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                onChange((prev) => ({ ...prev, ventilation: opt.id }));
+                return;
+              } else {
+                return;
+              }
+              const nextOpt = VENTILATION_OPTIONS[nextIndex];
+              onChange((prev) => ({ ...prev, ventilation: nextOpt.id }));
+              document.getElementById(`vent-radio-${nextOpt.id}`)?.focus();
+            };
+
             return (
               <button
+                id={`vent-radio-${opt.id}`}
                 type="button"
+                role="radio"
+                aria-checked={isSelected}
+                tabIndex={isSelected ? 0 : -1}
+                onKeyDown={handleKeyDown}
                 key={opt.id}
                 onClick={() =>
                   onChange((prev) => ({
@@ -218,6 +242,7 @@ export const IndoorConditionsCard: React.FC<IndoorConditionsCardProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
+                  aria-label="Decrease air purifier count"
                   onClick={() =>
                     onChange((prev) => ({
                       ...prev,
@@ -236,6 +261,7 @@ export const IndoorConditionsCard: React.FC<IndoorConditionsCardProps> = ({
                 </span>
                 <button
                   type="button"
+                  aria-label="Increase air purifier count"
                   onClick={() =>
                     onChange((prev) => ({
                       ...prev,

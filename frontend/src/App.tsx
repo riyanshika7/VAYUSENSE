@@ -8,11 +8,11 @@
  *  - Gemini GenAI personalized reasoning with routine, indoor air, swaps & alerts
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchAIPlan, fetchRuleRecommendations, fetchHealth } from './services/api';
 import { useAQI } from './hooks/useAQI';
 import { useProfile } from './hooks/useProfile';
-import type { AQIResponse } from './types/aqi';
+import type { AQIResponse, LocationSelection } from './types/aqi';
 import type {
   AIPersonalizedPlan,
   RiskAssessmentResult,
@@ -24,7 +24,7 @@ import {
   DESIGN_FIXTURE_AI_PLAN,
 } from './fixtures/designFixtures';
 import { Sidebar, type NavigationTab } from './components/layout/Sidebar';
-import { Header, type LocationSelection } from './components/layout/Header';
+import { Header } from './components/layout/Header';
 import {
   AQIHeroCardSkeleton,
   PollutantBreakdownSkeleton,
@@ -45,12 +45,10 @@ import { DailyTimelineView } from './components/explainability/DailyTimelineView
 import { CompletionTrackerCard } from './components/explainability/CompletionTrackerCard';
 import { WhatChangedInspector, type WhatChangedState } from './components/explainability/WhatChangedInspector';
 import {
-  Users,
   AlertTriangle,
   WifiOff,
   RefreshCw,
   ServerCrash,
-  Sparkles,
 } from 'lucide-react';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -65,6 +63,7 @@ export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<NavigationTab>('overview');
   const [currentLocation, setCurrentLocation] = useState<LocationSelection>(DEFAULT_LOCATION);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
 
   // ── Backend health state ───────────────────────────────────────────────────
   const [isBackendConnected, setIsBackendConnected] = useState(false);
@@ -140,6 +139,7 @@ export const App: React.FC = () => {
     riskScore: number;
     ruleTitles: string[];
   } | null>(null);
+  const planRequestIdRef = React.useRef<number>(0);
   const [whatChangedDelta, setWhatChangedDelta] = useState<WhatChangedState | null>(null);
 
   // ── Derived display data ───────────────────────────────────────────────────
@@ -171,6 +171,7 @@ export const App: React.FC = () => {
   // ── Personalization Engine: Re-evaluate when profile or AQI changes ────────
   const loadPersonalizedIntelligence = useCallback(
     async (profile: HouseholdProfile, aqiData?: AQIResponse | null) => {
+      const requestId = ++planRequestIdRef.current;
       setAiPlanStatus('loading');
       try {
         // 1. Fetch deterministic risk assessment and rule recommendations
@@ -179,6 +180,10 @@ export const App: React.FC = () => {
           aqi_data: aqiData || undefined,
           location: currentLocation.query,
         });
+
+        // Drop response if a newer request was dispatched while waiting
+        if (requestId !== planRequestIdRef.current) return;
+
         setRiskAssessment(rulesResponse.risk_assessment);
         setRuleRecommendations(rulesResponse.recommendations);
 
@@ -240,9 +245,13 @@ export const App: React.FC = () => {
           aqi_data: aqiData || undefined,
           location: currentLocation.query,
         });
+
+        if (requestId !== planRequestIdRef.current) return;
+
         setAiPlan(plan);
         setAiPlanStatus('success');
       } catch (err) {
+        if (requestId !== planRequestIdRef.current) return;
         console.warn('Personalized intelligence call failed, using fallback:', err);
         setAiPlanStatus('error');
       }
@@ -264,6 +273,38 @@ export const App: React.FC = () => {
     refreshAQI();
     loadPersonalizedIntelligence(activeProfile, liveAqiData);
   };
+
+  // ── Screen Reader Announcements (polite, user-action triggered) ─────────
+  const isInitialAqiMount = useRef(true);
+  const isInitialProfileMount = useRef(true);
+
+  useEffect(() => {
+    if (isInitialAqiMount.current) {
+      isInitialAqiMount.current = false;
+      return;
+    }
+    if (displayAqi) {
+      setAnnouncement(
+        `Air quality data updated for ${displayAqi.location_name || displayAqi.station_name}: AQI ${displayAqi.aqi ?? 'unreported'}, ${displayAqi.classification?.category || ''}`
+      );
+    }
+  }, [displayAqi?.aqi, displayAqi?.station_name]);
+
+  useEffect(() => {
+    if (isInitialProfileMount.current) {
+      isInitialProfileMount.current = false;
+      return;
+    }
+    if (activeProfile.profile_name) {
+      setAnnouncement(`Household profile switched to ${activeProfile.profile_name}`);
+    }
+  }, [activeProfile.profile_name]);
+
+  useEffect(() => {
+    if (aqiStatus === 'error' && aqiError) {
+      setAnnouncement(`Air quality request error: ${aqiError}`);
+    }
+  }, [aqiStatus, aqiError]);
 
   // ── Render Helpers ─────────────────────────────────────────────────────────
   const renderErrorState = () => (
@@ -292,6 +333,32 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-surface-canvas flex">
+      {/* ── Skip to Main Content Link (WCAG 2.4.1 Bypass Blocks) ── */}
+      <a
+        href="#main-content"
+        onClick={(e) => {
+          e.preventDefault();
+          const target = document.getElementById('main-content');
+          if (target) {
+            target.focus();
+            target.scrollIntoView();
+          }
+        }}
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-slate-900 focus:text-white focus:rounded-xl focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-vayu-500 text-xs font-bold"
+      >
+        Skip to main content
+      </a>
+
+      {/* ── Screen Reader Live Announcement Region ── */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announcement}
+      </div>
+
       {/* ── Sidebar Navigation ── */}
       <Sidebar
         currentTab={currentTab}
@@ -374,7 +441,13 @@ export const App: React.FC = () => {
         )}
 
         {/* ── Main Tab Content ── */}
-        <main className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto space-y-6 focus:outline-none"
+        >
+          <h1 className="sr-only">VayuSense — Urban Air Quality Intelligence & Personalized Exposure Protection</h1>
+
           {/* Personalized Alerts Banner */}
           <PersonalizedAlertsBanner alerts={displayAiPlan?.personalized_alerts} />
 
@@ -639,7 +712,10 @@ export const App: React.FC = () => {
                           `VayuSense Exposure Risk score for ${activeProfile.profile_name || 'Household'} at ${currentLocation.label}.`
                         }
                       />
-                      <AQITrendChart currentAqi={displayAqi.aqi ?? null} />
+                      <AQITrendChart
+                        currentAqi={displayAqi.aqi ?? null}
+                        forecast={displayAqi.forecast ?? null}
+                      />
                     </>
                   )}
                 </>

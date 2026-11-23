@@ -128,6 +128,7 @@ class RecommendationRuleRequest(BaseModel):
     )
     preset_name: Optional[str] = Field(
         default=None,
+        max_length=50,
         description="Optionally load preset ('daily_commuter', 'family', 'senior_sensitive')",
     )
     aqi_data: Optional[AQIResponse] = Field(
@@ -136,10 +137,11 @@ class RecommendationRuleRequest(BaseModel):
     )
     location: Optional[str] = Field(
         default=None,
+        max_length=100,
         description="Location name or station to query live if aqi_data is omitted",
     )
-    lat: Optional[float] = Field(default=None, description="Latitude coordinate if querying by coords")
-    lon: Optional[float] = Field(default=None, description="Longitude coordinate if querying by coords")
+    lat: Optional[float] = Field(default=None, ge=-90.0, le=90.0, description="Latitude coordinate if querying by coords")
+    lon: Optional[float] = Field(default=None, ge=-180.0, le=180.0, description="Longitude coordinate if querying by coords")
 
 
 # Alias for flexibility

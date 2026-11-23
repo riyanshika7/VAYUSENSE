@@ -25,14 +25,9 @@ import {
 } from 'lucide-react';
 import { HouseholdProfile } from '../../types/profile';
 import { searchCities, PRESET_CITY_SUGGESTIONS, type CitySearchResult } from '../../services/aqiService';
+import type { LocationSelection } from '../../types/aqi';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-export interface LocationSelection {
-  /** Query string passed to backend (/api/aqi?location=...). */
-  query: string;
-  /** Human-readable display label. */
-  label: string;
-}
+export type { LocationSelection };
 
 interface HeaderProps {
   currentLocation: LocationSelection;
@@ -92,9 +87,11 @@ export const Header: React.FC<HeaderProps> = ({
   const [searchResults, setSearchResults] = useState<CitySearchResult[]>(PRESET_CITY_SUGGESTIONS);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerBtnRef = useRef<HTMLButtonElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Format today's date in Indian locale
@@ -122,6 +119,7 @@ export const Header: React.FC<HeaderProps> = ({
   const handleSearchInput = useCallback((value: string) => {
     setSearchQuery(value);
     setSearchError(null);
+    setActiveIndex(-1);
     clearTimeout(debounceRef.current);
 
     if (!value.trim()) {
@@ -156,6 +154,7 @@ export const Header: React.FC<HeaderProps> = ({
     setSearchQuery('');
     setSearchResults(PRESET_CITY_SUGGESTIONS);
     setSearchError(null);
+    setActiveIndex(-1);
     // Focus input on next tick
     setTimeout(() => inputRef.current?.focus(), 50);
   };
@@ -165,11 +164,30 @@ export const Header: React.FC<HeaderProps> = ({
     onLocationChange({ query: result.query, label: result.label });
     setIsDropdownOpen(false);
     setSearchQuery('');
+    setActiveIndex(-1);
   };
 
-  // ── Keyboard: Escape closes dropdown ───────────────────────────────────────
+  // ── Keyboard: Escape closes dropdown, ArrowDown/Up moves, Enter selects ───
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') setIsDropdownOpen(false);
+    if (e.key === 'Escape') {
+      setIsDropdownOpen(false);
+      triggerBtnRef.current?.focus();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (searchResults.length > 0) {
+        setActiveIndex((prev) => (prev < searchResults.length - 1 ? prev + 1 : 0));
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (searchResults.length > 0) {
+        setActiveIndex((prev) => (prev > 0 ? prev - 1 : searchResults.length - 1));
+      }
+    } else if (e.key === 'Enter') {
+      if (activeIndex >= 0 && activeIndex < searchResults.length && searchResults[activeIndex]) {
+        e.preventDefault();
+        handleSelect(searchResults[activeIndex]);
+      }
+    }
   };
 
   const isBusy = isLoading || isRefreshing;
@@ -183,6 +201,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Mobile hamburger */}
           <button
+            id="mobile-menu-trigger"
             onClick={onOpenMobileMenu}
             className="p-2 rounded-xl text-slate-600 hover:bg-slate-100 lg:hidden"
             aria-label="Open navigation menu"
@@ -195,10 +214,14 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Trigger pill */}
             <button
+              ref={triggerBtnRef}
+              type="button"
               onClick={handleOpenDropdown}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/80 border border-slate-200 text-sm font-medium text-slate-800 hover:bg-slate-200/60 transition-colors max-w-[220px]"
-              aria-haspopup="listbox"
+              aria-haspopup="dialog"
               aria-expanded={isDropdownOpen}
+              aria-controls="location-search-dropdown"
+              aria-label={`Change monitoring location. Current: ${currentLocation.label}`}
               title="Change monitoring location"
             >
               <MapPin className="w-4 h-4 text-vayu-700 shrink-0" />
@@ -208,7 +231,12 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Dropdown panel */}
             {isDropdownOpen && (
-              <div className="absolute top-full left-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50">
+              <div
+                id="location-search-dropdown"
+                role="region"
+                aria-label="Location search"
+                className="absolute top-full left-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50"
+              >
 
                 {/* Search input */}
                 <div className="p-3 border-b border-slate-100">
@@ -217,9 +245,18 @@ export const Header: React.FC<HeaderProps> = ({
                       ? <Loader2 className="w-4 h-4 text-vayu-600 animate-spin shrink-0" />
                       : <Search className="w-4 h-4 text-slate-400 shrink-0" />
                     }
+                    <label htmlFor="city-search-input" className="sr-only">
+                      Search city or monitoring station
+                    </label>
                     <input
+                      id="city-search-input"
                       ref={inputRef}
                       type="text"
+                      role="combobox"
+                      aria-expanded={isDropdownOpen}
+                      aria-autocomplete="list"
+                      aria-controls="city-search-listbox"
+                      aria-activedescendant={activeIndex >= 0 ? `city-option-${activeIndex}` : undefined}
                       value={searchQuery}
                       onChange={e => handleSearchInput(e.target.value)}
                       onKeyDown={handleKeyDown}
@@ -229,17 +266,19 @@ export const Header: React.FC<HeaderProps> = ({
                     />
                     {searchQuery && (
                       <button
+                        type="button"
                         onClick={() => handleSearchInput('')}
+                        aria-label="Clear search query"
                         className="text-slate-400 hover:text-slate-600"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
                     )}
                   </div>
                 </div>
 
                 {/* Results list */}
-                <div className="max-h-72 overflow-y-auto">
+                <div role="region" aria-label="Search results" className="max-h-72 overflow-y-auto">
                   {/* Section label */}
                   <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-50">
                     {!searchQuery.trim()
@@ -251,8 +290,8 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
 
                   {searchError && (
-                    <div className="flex items-center gap-2 px-4 py-3 text-xs text-amber-700 bg-amber-50">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                    <div role="alert" className="flex items-center gap-2 px-4 py-3 text-xs text-amber-700 bg-amber-50">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                       {searchError}
                     </div>
                   )}
@@ -263,32 +302,41 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
                   )}
 
-                  {searchResults.map((result, idx) => (
-                    <button
-                      key={`${result.query}-${idx}`}
-                      onClick={() => handleSelect(result)}
-                      className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors hover:bg-slate-50 ${
-                        result.query === currentLocation.query ? 'bg-vayu-50' : ''
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <MapPin className={`w-3.5 h-3.5 shrink-0 ${result.isPreset ? 'text-vayu-600' : 'text-slate-400'}`} />
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-slate-800 truncate">
-                            {result.label}
-                          </p>
-                          {!result.isPreset && (
-                            <p className="text-[10px] text-slate-400 font-mono">{result.query}</p>
+                  <ul id="city-search-listbox" role="listbox" aria-label="Available locations">
+                    {searchResults.map((result, idx) => {
+                      const isSelected = result.query === currentLocation.query;
+                      const isFocused = activeIndex === idx;
+                      return (
+                        <li
+                          id={`city-option-${idx}`}
+                          key={`${result.query}-${idx}`}
+                          role="option"
+                          aria-selected={isFocused || isSelected}
+                          onClick={() => handleSelect(result)}
+                          className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors cursor-pointer hover:bg-slate-50 ${
+                            isFocused ? 'bg-vayu-100 text-vayu-950 ring-1 ring-inset ring-vayu-500' : isSelected ? 'bg-vayu-50' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <MapPin className={`w-3.5 h-3.5 shrink-0 ${result.isPreset ? 'text-vayu-600' : 'text-slate-400'}`} aria-hidden="true" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-slate-800 truncate">
+                                {result.label}
+                              </p>
+                              {!result.isPreset && (
+                                <p className="text-[10px] text-slate-400 font-mono">{result.query}</p>
+                              )}
+                            </div>
+                          </div>
+                          {result.aqi !== null && (
+                            <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded-full shrink-0 ${getAqiBadgeColor(result.aqi)}`}>
+                              {result.aqi}
+                            </span>
                           )}
-                        </div>
-                      </div>
-                      {result.aqi !== null && (
-                        <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded-full shrink-0 ${getAqiBadgeColor(result.aqi)}`}>
-                          {result.aqi}
-                        </span>
-                      )}
-                    </button>
-                  ))}
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
 
                 {/* Footer note */}
@@ -375,8 +423,10 @@ export const Header: React.FC<HeaderProps> = ({
             disabled={isBusy}
             className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             title="Refresh air quality measurements from WAQI"
+            aria-label="Refresh air quality measurements from WAQI"
+            aria-busy={isBusy}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin' : ''}`} aria-hidden="true" />
             <span className="hidden sm:inline">Refresh AQI</span>
           </button>
         </div>

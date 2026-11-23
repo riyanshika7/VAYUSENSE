@@ -87,8 +87,8 @@ export const PollutantBreakdown: React.FC<PollutantBreakdownProps> = ({ pollutan
                 <span className="text-xs font-bold font-mono text-slate-700">
                   {item.name}
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium truncate">
-                  {isReported ? 'IAQI' : ''}
+                <span className={`text-[10px] font-medium truncate ${item.critical && item.data && item.data.value > 100 ? 'text-rose-700 font-bold' : 'text-slate-400'}`}>
+                  {isReported ? (item.critical && item.data && item.data.value > 100 ? 'Elevated' : 'IAQI') : ''}
                 </span>
               </div>
 

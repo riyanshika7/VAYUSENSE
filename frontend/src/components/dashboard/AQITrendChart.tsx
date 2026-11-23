@@ -15,6 +15,30 @@ import {
 import { TrendingUp, Calendar, Info, Activity } from 'lucide-react';
 import { ForecastData } from '../../types/aqi';
 
+interface ForecastDataPoint {
+  rawDay: string;
+  day: string;
+  avg: number | null;
+  min: number | null;
+  max: number | null;
+  range: number | null;
+}
+
+interface DiurnalDataPoint {
+  time: string;
+  aqi: number;
+  label: string;
+}
+
+interface ChartTooltipProps<T> {
+  active?: boolean;
+  payload?: Array<{
+    value: number | string;
+    payload: T;
+  }>;
+  label?: string | number;
+}
+
 interface AQITrendChartProps {
   currentAqi: number | null;
   forecast?: ForecastData | null;
@@ -74,7 +98,7 @@ export const AQITrendChart: React.FC<AQITrendChartProps> = ({ currentAqi, foreca
   }));
 
   // Tooltip for Multi-Day Forecast
-  const ForecastTooltip = ({ active, payload, label }: any) => {
+  const ForecastTooltip = ({ active, payload }: ChartTooltipProps<ForecastDataPoint>) => {
     if (active && payload && payload.length) {
       const dataPoint = payload[0].payload;
       return (
@@ -104,7 +128,7 @@ export const AQITrendChart: React.FC<AQITrendChartProps> = ({ currentAqi, foreca
   };
 
   // Tooltip for Diurnal Model
-  const DiurnalTooltip = ({ active, payload, label }: any) => {
+  const DiurnalTooltip = ({ active, payload, label }: ChartTooltipProps<DiurnalDataPoint>) => {
     if (active && payload && payload.length) {
       const val = payload[0].value;
       const dataPoint = payload[0].payload;
@@ -121,6 +145,24 @@ export const AQITrendChart: React.FC<AQITrendChartProps> = ({ currentAqi, foreca
       );
     }
     return null;
+  };
+
+  const handleTabKeyDown = (e: React.KeyboardEvent, currentTabName: 'forecast' | 'diurnal') => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const nextTab = currentTabName === 'forecast' ? 'diurnal' : 'forecast';
+      setActiveTab(nextTab);
+      const nextBtn = document.getElementById(`tab-${nextTab}`);
+      nextBtn?.focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setActiveTab('forecast');
+      document.getElementById('tab-forecast')?.focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      setActiveTab('diurnal');
+      document.getElementById('tab-diurnal')?.focus();
+    }
   };
 
   return (
@@ -151,9 +193,19 @@ export const AQITrendChart: React.FC<AQITrendChartProps> = ({ currentAqi, foreca
         </div>
 
         {/* View Switcher Tabs */}
-        <div className="flex items-center rounded-xl bg-slate-100/80 p-1 text-xs font-semibold self-start sm:self-auto">
+        <div
+          role="tablist"
+          aria-label="Air quality chart view"
+          className="flex items-center rounded-xl bg-slate-100/80 p-1 text-xs font-semibold self-start sm:self-auto"
+        >
           <button
+            id="tab-forecast"
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'forecast'}
+            aria-controls="panel-forecast"
+            tabIndex={activeTab === 'forecast' ? 0 : -1}
+            onKeyDown={(e) => handleTabKeyDown(e, 'forecast')}
             onClick={() => setActiveTab('forecast')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
               activeTab === 'forecast'
@@ -161,11 +213,17 @@ export const AQITrendChart: React.FC<AQITrendChartProps> = ({ currentAqi, foreca
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Calendar className="w-3.5 h-3.5 text-vayu-600" />
+            <Calendar className="w-3.5 h-3.5 text-vayu-600" aria-hidden="true" />
             <span>Station Forecast</span>
           </button>
           <button
+            id="tab-diurnal"
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'diurnal'}
+            aria-controls="panel-diurnal"
+            tabIndex={activeTab === 'diurnal' ? 0 : -1}
+            onKeyDown={(e) => handleTabKeyDown(e, 'diurnal')}
             onClick={() => setActiveTab('diurnal')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
               activeTab === 'diurnal'
@@ -173,16 +231,71 @@ export const AQITrendChart: React.FC<AQITrendChartProps> = ({ currentAqi, foreca
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Activity className="w-3.5 h-3.5 text-teal-600" />
+            <Activity className="w-3.5 h-3.5 text-teal-600" aria-hidden="true" />
             <span>24h Diurnal Cycle</span>
           </button>
         </div>
       </div>
 
+      {/* Screen reader text alternative for charts */}
+      <div className="sr-only">
+        {activeTab === 'forecast' ? (
+          <div>
+            {hasStationForecast ? (
+              <table>
+                <caption className="font-bold">Station 5-Day Forecast Data Summary (PM2.5 AQI)</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Day</th>
+                    <th scope="col">Average AQI</th>
+                    <th scope="col">Min AQI</th>
+                    <th scope="col">Max AQI</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {forecastData.map((d) => (
+                    <tr key={d.rawDay}>
+                      <td>{d.day}</td>
+                      <td>{d.avg ?? 'N/A'}</td>
+                      <td>{d.min ?? 'N/A'}</td>
+                      <td>{d.max ?? 'N/A'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>No multi-day telemetry forecast broadcast by current station.</p>
+            )}
+          </div>
+        ) : (
+          <div>
+            <table>
+              <caption className="font-bold">24-Hour Diurnal Boundary Layer Model Summary</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Time</th>
+                  <th scope="col">Atmospheric Phase</th>
+                  <th scope="col">Estimated AQI</th>
+                </tr>
+              </thead>
+              <tbody>
+                {diurnalData.map((d) => (
+                  <tr key={d.time}>
+                    <td>{d.time}</td>
+                    <td>{d.label}</td>
+                    <td>{d.aqi}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       {/* Main Chart Area */}
       {activeTab === 'forecast' ? (
         hasStationForecast ? (
-          <div>
+          <div id="panel-forecast" role="tabpanel" aria-labelledby="tab-forecast">
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={forecastData} margin={{ top: 15, right: 15, left: -20, bottom: 5 }}>
@@ -252,7 +365,7 @@ export const AQITrendChart: React.FC<AQITrendChartProps> = ({ currentAqi, foreca
             </div>
           </div>
         ) : (
-          <div className="py-12 px-6 text-center rounded-xl bg-slate-50 border border-slate-200/70">
+          <div id="panel-forecast" role="tabpanel" aria-labelledby="tab-forecast" className="py-12 px-6 text-center rounded-xl bg-slate-50 border border-slate-200/70">
             <Info className="w-8 h-8 text-slate-400 mx-auto mb-2" />
             <h4 className="text-sm font-bold text-slate-700">Multi-Day Telemetry Not Published</h4>
             <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
@@ -270,7 +383,7 @@ export const AQITrendChart: React.FC<AQITrendChartProps> = ({ currentAqi, foreca
         )
       ) : (
         /* 24-Hour Diurnal Ambient Inversion Curve */
-        <div>
+        <div id="panel-diurnal" role="tabpanel" aria-labelledby="tab-diurnal">
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={diurnalData} margin={{ top: 15, right: 15, left: -20, bottom: 5 }}>
