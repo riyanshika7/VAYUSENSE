@@ -23,18 +23,14 @@ Validates all 20 QA audit items:
 20. No unverified percentage claims in recommendations
 """
 
-import asyncio
 from datetime import datetime, timezone
 import pytest
-from httpx import ASGITransport, AsyncClient, Response, TimeoutException, RequestError
+from httpx import ASGITransport, AsyncClient, Response, TimeoutException
 
 from app.config import Settings
 from app.main import create_app
-from app.models.ai_response import AIPersonalizedPlan
 from app.models.aqi import (
     AQIResponse,
-    AQIScaleClassification,
-    GeoCoordinates,
     PollutantDetail,
     PollutantMeasurements,
 )
@@ -516,7 +512,9 @@ def test_qa_18_recommendation_causal_chain_integrity():
         assert rec.causal_chain.live_data, f"Rule {rec.supporting_data_rule} missing live_data in chain"
         assert rec.causal_chain.household_context, f"Rule {rec.supporting_data_rule} missing household_context in chain"
         assert rec.causal_chain.detected_risk, f"Rule {rec.supporting_data_rule} missing detected_risk in chain"
-        assert rec.causal_chain.recommended_action, f"Rule {rec.supporting_data_rule} missing recommended_action in chain"
+        assert rec.causal_chain.recommended_action, (
+            f"Rule {rec.supporting_data_rule} missing recommended_action in chain"
+        )
         assert rec.causal_chain.expected_benefit, f"Rule {rec.supporting_data_rule} missing expected_benefit in chain"
         assert rec.priority.value in ("Critical", "High", "Medium", "Low")
 
@@ -596,5 +594,6 @@ def test_qa_20_no_percentage_claims_in_recommendations():
         text_to_check = f"{rec.action} {rec.reason} {rec.expected_benefit}".lower()
         for token in forbidden_percentage_tokens:
             assert token not in text_to_check, (
-                f"Rule '{rec.supporting_data_rule}' contains unverified percentage claim '{token}': {rec.expected_benefit}"
+                f"Rule '{rec.supporting_data_rule}' contains unverified percentage claim "
+                f"'{token}': {rec.expected_benefit}"
             )

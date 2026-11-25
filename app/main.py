@@ -93,8 +93,9 @@ def create_app() -> FastAPI:
     )
     async def health_check() -> HealthResponse:
         current_settings = get_settings()
+        is_healthy = current_settings.is_waqi_configured and current_settings.is_gemini_configured
         return HealthResponse(
-            status="healthy" if (current_settings.is_waqi_configured and current_settings.is_gemini_configured) else "degraded",
+            status="healthy" if is_healthy else "degraded",
             app_name=current_settings.APP_NAME,
             version=current_settings.APP_VERSION,
             timestamp=datetime.now(timezone.utc).isoformat(),

@@ -144,7 +144,7 @@ class WAQIService:
         """Execute an asynchronous HTTP request against the WAQI API with error handling."""
         token = self._ensure_token_configured()
         url = f"{self.settings.WAQI_BASE_URL.rstrip('/')}/{endpoint.lstrip('/')}"
-        
+
         request_params = params.copy() if params else {}
         request_params["token"] = token
 
@@ -153,7 +153,7 @@ class WAQIService:
 
         try:
             response = await client.get(url, params=request_params)
-            
+
             if response.status_code == 429:
                 logger.warning("WAQI upstream returned HTTP 429 Rate Limit")
                 raise HTTPException(
@@ -242,7 +242,8 @@ class WAQIService:
                 category="Moderate",
                 color_hex="#FFFF00",
                 health_implications=(
-                    "Air quality is acceptable; however, sensitive individuals may experience minor respiratory irritation."
+                    "Air quality is acceptable; however, sensitive individuals "
+                    "may experience minor respiratory irritation."
                 ),
             )
         elif aqi <= 150:

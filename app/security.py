@@ -2,7 +2,7 @@
 
 import time
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response

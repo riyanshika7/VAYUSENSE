@@ -252,7 +252,9 @@ export const App: React.FC = () => {
         setAiPlanStatus('success');
       } catch (err) {
         if (requestId !== planRequestIdRef.current) return;
-        console.warn('Personalized intelligence call failed, using fallback:', err);
+        if (import.meta.env.DEV) {
+          console.warn('Personalized intelligence call failed, using fallback:', err);
+        }
         setAiPlanStatus('error');
       }
     },

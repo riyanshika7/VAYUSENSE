@@ -164,7 +164,7 @@ class AIService:
 
         try:
             logger.info("Requesting Gemini reasoning from model: %s (timeout: %.1fs)", model_name, timeout_seconds)
-            
+
             response = await asyncio.wait_for(
                 client.aio.models.generate_content(
                     model=model_name,

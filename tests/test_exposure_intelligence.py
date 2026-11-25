@@ -9,16 +9,8 @@ from app.models.profile import (
     PRESET_DAILY_COMMUTER,
     PRESET_FAMILY,
     PRESET_SENIOR_SENSITIVE,
-    CommuteHabits,
-    CommuteMode,
-    CookingHabits,
-    ExerciseHabits,
-    ExerciseIntensity,
-    ExerciseTimeOfDay,
     HouseholdProfile,
     PurifierSetup,
-    TimeWindow,
-    VentilationCondition,
 )
 from app.services.recommendation_rules import RecommendationRulesEngine
 from app.services.risk_engine import RiskEngine
@@ -60,7 +52,9 @@ def test_risk_score_increases_monotonically_with_aqi():
         scores.append(res.exposure_risk_score)
 
     for i in range(len(scores) - 1):
-        assert scores[i] <= scores[i + 1], f"Expected score {scores[i]} <= {scores[i+1]} for AQI {aqi_levels[i]} vs {aqi_levels[i+1]}"
+        assert scores[i] <= scores[i + 1], (
+            f"Expected score {scores[i]} <= {scores[i+1]} for AQI {aqi_levels[i]} vs {aqi_levels[i+1]}"
+        )
 
 
 def test_vulnerability_multiplier_for_children_and_asthma():

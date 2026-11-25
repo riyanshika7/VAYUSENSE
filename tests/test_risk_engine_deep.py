@@ -9,7 +9,6 @@ Verifies:
 6. Preset risk hierarchy integrity across identical ambient conditions.
 """
 
-import pytest
 from app.models.aqi import AQIResponse, PollutantMeasurements
 from app.models.profile import (
     PRESET_DAILY_COMMUTER,

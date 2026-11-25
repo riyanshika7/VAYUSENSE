@@ -339,4 +339,3 @@ async def test_successful_forecast_parsing(monkeypatch, mock_settings):
     assert aqi_data.forecast.pm25[0].min == 140
     assert aqi_data.forecast.pm25[0].max == 220
     assert len(aqi_data.forecast.pm10) == 1
-

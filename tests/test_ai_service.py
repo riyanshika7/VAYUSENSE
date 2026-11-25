@@ -2,8 +2,6 @@
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-
-from app.config import Settings
 from app.main import create_app
 from app.models.ai_response import AIPersonalizedPlan
 from app.models.aqi import (

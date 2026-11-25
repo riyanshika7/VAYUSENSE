@@ -8,11 +8,9 @@ Verifies:
 """
 
 import json
-import pytest
 from app.models.aqi import (
     AQIResponse,
     AQIScaleClassification,
-    GeoCoordinates,
     PollutantDetail,
     PollutantMeasurements,
 )
@@ -24,7 +22,6 @@ from app.models.profile import (
 from app.models.recommendations import (
     RiskAssessmentResult,
     RiskComponentBreakdown,
-    RuleRecommendation,
 )
 from app.services.prompt_builder import SYSTEM_PROMPT, PromptBuilder
 from app.services.recommendation_rules import RecommendationRulesEngine

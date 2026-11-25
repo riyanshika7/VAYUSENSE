@@ -10,8 +10,7 @@ Verifies:
 7. Strict priority ordering (Critical -> High -> Medium -> Low).
 """
 
-import pytest
-from app.models.aqi import AQIResponse, AQIScaleClassification, GeoCoordinates, PollutantMeasurements
+from app.models.aqi import AQIResponse, AQIScaleClassification, PollutantMeasurements
 from app.models.profile import (
     PRESET_DAILY_COMMUTER,
     PRESET_FAMILY,
@@ -19,12 +18,8 @@ from app.models.profile import (
     CommuteHabits,
     CommuteMode,
     CookingHabits,
-    ExerciseHabits,
-    ExerciseIntensity,
-    ExerciseTimeOfDay,
     HouseholdProfile,
     PurifierSetup,
-    VentilationCondition,
 )
 from app.models.recommendations import RecommendationPriority
 from app.services.recommendation_rules import RecommendationRulesEngine
@@ -202,5 +197,6 @@ def test_priority_sorting_integrity():
         rank_prev = priority_order[recs[i - 1].priority]
         rank_curr = priority_order[recs[i].priority]
         assert rank_prev <= rank_curr, (
-            f"Sorting violation: {recs[i-1].priority} (rank {rank_prev}) appeared after {recs[i].priority} (rank {rank_curr})"
+            f"Sorting violation: {recs[i-1].priority} (rank {rank_prev}) appeared after "
+            f"{recs[i].priority} (rank {rank_curr})"
         )
