@@ -34,16 +34,65 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const sidebarRef = React.useRef<HTMLElement>(null);
   const closeBtnRef = React.useRef<HTMLButtonElement>(null);
+  const [isDesktop, setIsDesktop] = React.useState<boolean>(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return true;
+    }
+    return window.matchMedia('(min-width: 1024px)').matches;
+  });
+
+  // Match Tailwind's lg (1024px) breakpoint so closed mobile drawer semantics never hide desktop navigation
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia('(min-width: 1024px)');
+    setIsDesktop(mq.matches);
+    const handleChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', handleChange);
+      return () => mq.removeEventListener('change', handleChange);
+    }
+    mq.addListener(handleChange);
+    return () => mq.removeListener(handleChange);
+  }, []);
+
+  const isMobileHidden = !isDesktop && !isOpen;
+  const isMobileOpen = !isDesktop && isOpen;
+
+  // Exit mobile modal drawer state cleanly if viewport resizes into desktop breakpoint
+  React.useEffect(() => {
+    if (isDesktop && isOpen) {
+      onClose();
+    }
+  }, [isDesktop, isOpen, onClose]);
+
+  // Keep inert synced and ensure focus cannot remain trapped inside a closed/hidden mobile drawer
+  React.useEffect(() => {
+    const el = sidebarRef.current;
+    if (!el) return;
+    if (isMobileHidden) {
+      if (typeof document !== 'undefined' && el.contains(document.activeElement)) {
+        const trigger = document.getElementById('mobile-menu-trigger');
+        if (trigger && trigger.offsetParent !== null) {
+          trigger.focus();
+        } else {
+          document.getElementById('main-content')?.focus();
+        }
+      }
+      (el as HTMLElement & { inert: boolean }).inert = true;
+    } else {
+      (el as HTMLElement & { inert: boolean }).inert = false;
+    }
+  }, [isMobileHidden]);
 
   // Close on Escape key press, auto-focus close button, trap Tab navigation when open on mobile
   React.useEffect(() => {
-    if (!isOpen) return;
+    if (!isMobileOpen) return;
     closeBtnRef.current?.focus();
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
         document.getElementById('mobile-menu-trigger')?.focus();
+        onClose();
         return;
       }
 
@@ -71,7 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isMobileOpen, onClose]);
 
   const navItems: { id: NavigationTab; label: string; icon: React.ReactNode; desc: string }[] = [
     {
@@ -114,7 +163,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           role="presentation"
           aria-hidden="true"
           className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
-          onClick={onClose}
+          onClick={() => {
+            if (typeof document !== 'undefined' && sidebarRef.current?.contains(document.activeElement)) {
+              document.getElementById('mobile-menu-trigger')?.focus();
+            }
+            onClose();
+          }}
         />
       )}
 
@@ -123,9 +177,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         ref={sidebarRef}
         role={isOpen ? 'dialog' : undefined}
         aria-modal={isOpen ? 'true' : undefined}
+        aria-hidden={isMobileHidden ? 'true' : undefined}
         aria-label={isOpen ? 'Navigation Menu' : 'Sidebar Navigation'}
-        className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:visible ${
+          isOpen ? 'translate-x-0 visible' : '-translate-x-full invisible'
         }`}
       >
         {/* Brand Header */}
@@ -147,9 +202,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             ref={closeBtnRef}
             type="button"
+            tabIndex={isMobileHidden ? -1 : undefined}
             onClick={() => {
-              onClose();
               document.getElementById('mobile-menu-trigger')?.focus();
+              onClose();
             }}
             aria-label="Close navigation menu"
             className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 lg:hidden"
@@ -169,8 +225,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 type="button"
                 key={item.id}
+                tabIndex={isMobileHidden ? -1 : undefined}
                 onClick={() => {
                   onTabChange(item.id);
+                  if (isMobileOpen) {
+                    document.getElementById('main-content')?.focus();
+                  }
                   onClose();
                 }}
                 aria-current={isActive ? 'page' : undefined}

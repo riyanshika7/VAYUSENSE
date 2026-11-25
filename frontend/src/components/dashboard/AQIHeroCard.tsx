@@ -159,18 +159,18 @@ export const AQIHeroCard: React.FC<AQIHeroCardProps> = ({
       {/* ── Station header ── */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 pb-4 border-b border-black/5">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-            <MapPin className="w-3.5 h-3.5 text-vayu-600" />
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-600">
+            <MapPin className="w-3.5 h-3.5 text-vayu-600" aria-hidden="true" />
             <span>Reporting Station</span>
           </div>
           <h2 className="text-lg font-bold text-slate-900 mt-0.5 leading-snug">
             {aqiData.station_name}
           </h2>
           {aqiData.location_name && aqiData.location_name !== aqiData.station_name && (
-            <p className="text-xs text-slate-500 mt-0.5">{aqiData.location_name}</p>
+            <p className="text-xs text-slate-600 mt-0.5">{aqiData.location_name}</p>
           )}
           {aqiData.coordinates && (
-            <p className="text-xs text-slate-400 font-mono mt-0.5">
+            <p className="text-xs text-slate-600 font-mono mt-0.5">
               {aqiData.coordinates.latitude.toFixed(4)}°N,{' '}
               {aqiData.coordinates.longitude.toFixed(4)}°E
             </p>
@@ -187,7 +187,7 @@ export const AQIHeroCard: React.FC<AQIHeroCardProps> = ({
               href={aqiData.station_url!}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-50 transition-colors"
+              className="text-slate-600 hover:text-slate-800 p-1 rounded-md hover:bg-slate-50 transition-colors"
               title="View on aqicn.org"
               aria-label={`View ${aqiData.station_name} station on aqicn.org (opens in a new tab)`}
             >
@@ -206,7 +206,7 @@ export const AQIHeroCard: React.FC<AQIHeroCardProps> = ({
             <span className="text-6xl sm:text-7xl font-extrabold tracking-tight text-slate-900 font-mono tabular-nums">
               {aqi !== null && aqi !== undefined ? aqi : '—'}
             </span>
-            <span className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+            <span className="text-sm font-semibold uppercase tracking-wider text-slate-600">
               AQI
             </span>
           </div>
@@ -216,9 +216,9 @@ export const AQIHeroCard: React.FC<AQIHeroCardProps> = ({
               {category}
             </span>
             {aqiData.dominant_pollutant && (
-              <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+              <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
                 Primary:{' '}
-                <strong className="uppercase text-slate-700">{aqiData.dominant_pollutant}</strong>
+                <strong className="uppercase text-slate-800">{aqiData.dominant_pollutant}</strong>
               </span>
             )}
           </div>
@@ -227,7 +227,7 @@ export const AQIHeroCard: React.FC<AQIHeroCardProps> = ({
         {/* Health implication + methodology note */}
         <div className="md:col-span-7 space-y-3 bg-white/70 rounded-xl p-4 border border-black/5">
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
               <ShieldAlert className="w-3.5 h-3.5" aria-hidden="true" />
               Health Implication
             </h3>
@@ -240,21 +240,21 @@ export const AQIHeroCard: React.FC<AQIHeroCardProps> = ({
           {/* ── Scale disclaimer — always shown, never confused with CPCB ── */}
           <div className="pt-2 border-t border-black/5">
             <div className="flex items-start gap-1.5 text-[11px] text-slate-500 leading-normal">
-              <Info className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+              <Info className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" aria-hidden="true" />
               <span>
                 Standardized via{' '}
                 <strong className="text-slate-700">
                   {classification?.scale_name ?? 'WAQI / US EPA Standard'}
                 </strong>{' '}
                 formula.{' '}
-                <span className="text-slate-400">
+                <span className="text-slate-600">
                   This is <em>not</em> the official CPCB National AQI (NAQI) 24-hour
                   sub-index method used by Indian regulatory authorities.
                 </span>
               </span>
             </div>
             {classification?.methodology_note && (
-              <p className="mt-1.5 text-[10px] text-slate-400 italic leading-snug">
+              <p className="mt-1.5 text-[10px] text-slate-500 italic leading-snug">
                 {classification.methodology_note}
               </p>
             )}
@@ -263,12 +263,12 @@ export const AQIHeroCard: React.FC<AQIHeroCardProps> = ({
       </div>
 
       {/* ── Attribution strip ── */}
-      <div className="pt-3 border-t border-black/5 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
+      <div className="pt-3 border-t border-black/5 flex flex-wrap items-center justify-between text-xs text-slate-600 gap-2">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span>Source:</span>
-          <span className="font-medium text-slate-600">{aqiData.source}</span>
+          <span className="font-medium text-slate-700">{aqiData.source}</span>
           {aqiData.attributions.length > 0 && (
-            <span className="text-slate-300">·</span>
+            <span className="text-slate-300" aria-hidden="true">·</span>
           )}
           {aqiData.attributions.slice(0, 2).map((attr, i) => (
             isSafeUrl(attr.url)
@@ -278,15 +278,15 @@ export const AQIHeroCard: React.FC<AQIHeroCardProps> = ({
                   href={attr.url!}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-slate-500 hover:text-vayu-700 hover:underline transition-colors"
+                  className="text-slate-600 hover:text-vayu-700 hover:underline transition-colors"
                 >
                   {attr.name}
                 </a>
               )
-              : <span key={i} className="text-slate-500">{attr.name}</span>
+              : <span key={i} className="text-slate-600">{attr.name}</span>
           ))}
         </div>
-        <div className="font-mono text-[11px] text-slate-400">
+        <div className="font-mono text-[11px] text-slate-600">
           Sampled: {aqiData.measurement_time || 'Recent'}
         </div>
       </div>

@@ -58,7 +58,7 @@ function formatLastFetched(date: Date | null): string {
 }
 
 function getAqiBadgeColor(aqi: number | null): string {
-  if (aqi === null) return 'bg-slate-100 text-slate-500';
+  if (aqi === null) return 'bg-slate-100 text-slate-600';
   if (aqi <= 50) return 'bg-emerald-100 text-emerald-700';
   if (aqi <= 100) return 'bg-amber-100 text-amber-700';
   if (aqi <= 150) return 'bg-orange-100 text-orange-700';
@@ -256,12 +256,16 @@ export const Header: React.FC<HeaderProps> = ({
                       aria-expanded={isDropdownOpen}
                       aria-autocomplete="list"
                       aria-controls="city-search-listbox"
-                      aria-activedescendant={activeIndex >= 0 ? `city-option-${activeIndex}` : undefined}
+                      aria-activedescendant={
+                        activeIndex >= 0 && activeIndex < searchResults.length
+                          ? `city-option-${activeIndex}`
+                          : undefined
+                      }
                       value={searchQuery}
                       onChange={e => handleSearchInput(e.target.value)}
                       onKeyDown={handleKeyDown}
                       placeholder="Search city or station…"
-                      className="flex-1 text-sm bg-transparent border-none outline-none text-slate-800 placeholder:text-slate-400"
+                      className="flex-1 text-sm bg-transparent border-none outline-none text-slate-800 placeholder:text-slate-500"
                       autoComplete="off"
                     />
                     {searchQuery && (
@@ -269,7 +273,7 @@ export const Header: React.FC<HeaderProps> = ({
                         type="button"
                         onClick={() => handleSearchInput('')}
                         aria-label="Clear search query"
-                        className="text-slate-400 hover:text-slate-600"
+                        className="text-slate-500 hover:text-slate-700"
                       >
                         <X className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
@@ -280,7 +284,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {/* Results list */}
                 <div role="region" aria-label="Search results" className="max-h-72 overflow-y-auto">
                   {/* Section label */}
-                  <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-50">
+                  <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-50">
                     {!searchQuery.trim()
                       ? 'Suggested Cities'
                       : searchResults.length > 0
@@ -297,7 +301,7 @@ export const Header: React.FC<HeaderProps> = ({
                   )}
 
                   {!searchError && searchResults.length === 0 && !isSearching && searchQuery.trim().length >= 2 && (
-                    <div className="px-4 py-3 text-xs text-slate-400 italic">
+                    <div className="px-4 py-3 text-xs text-slate-500 italic">
                       No matching stations found.
                     </div>
                   )}
@@ -311,7 +315,7 @@ export const Header: React.FC<HeaderProps> = ({
                           id={`city-option-${idx}`}
                           key={`${result.query}-${idx}`}
                           role="option"
-                          aria-selected={isFocused || isSelected}
+                          aria-selected={isSelected}
                           onClick={() => handleSelect(result)}
                           className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors cursor-pointer hover:bg-slate-50 ${
                             isFocused ? 'bg-vayu-100 text-vayu-950 ring-1 ring-inset ring-vayu-500' : isSelected ? 'bg-vayu-50' : ''
@@ -324,7 +328,7 @@ export const Header: React.FC<HeaderProps> = ({
                                 {result.label}
                               </p>
                               {!result.isPreset && (
-                                <p className="text-[10px] text-slate-400 font-mono">{result.query}</p>
+                                <p className="text-[10px] text-slate-600 font-mono">{result.query}</p>
                               )}
                             </div>
                           </div>
@@ -340,7 +344,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
 
                 {/* Footer note */}
-                <div className="px-4 py-2 text-[10px] text-slate-400 border-t border-slate-100 bg-slate-50/50">
+                <div className="px-4 py-2 text-[10px] text-slate-500 border-t border-slate-100 bg-slate-50/50">
                   Station data via WAQI · Measurements fetched live from backend
                 </div>
               </div>
@@ -375,7 +379,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           {/* Backend connection indicator + last-fetched age */}
-          <div className="hidden md:flex items-center gap-1.5 text-[11px] text-slate-400">
+          <div className="hidden md:flex items-center gap-1.5 text-[11px] text-slate-500">
             {isBackendConnected
               ? <Wifi className="w-3.5 h-3.5 text-emerald-500" />
               : <WifiOff className="w-3.5 h-3.5 text-rose-500" />

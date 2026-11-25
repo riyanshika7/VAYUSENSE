@@ -36,13 +36,22 @@ const pairs = [
   ['Slate-700 #334155 on Slate-100 #f1f5f9', '#334155', '#f1f5f9'],
   ['Teal-800 #115e59 on Teal-50 #f0fdfa', '#115e59', '#f0fdfa'],
   ['Slate-500 #64748b on White #ffffff', '#64748b', '#ffffff'],
+  ['Slate-500 #64748b on Slate-50 #f8fafc', '#64748b', '#f8fafc'],
+  ['Slate-500 #64748b on Slate-50/60 over White #fbfcfd', '#64748b', '#fbfcfd'],
   ['Slate-600 #475569 on White #ffffff', '#475569', '#ffffff'],
+  ['Slate-600 #475569 on Slate-100 #f1f5f9', '#475569', '#f1f5f9'],
+  ['Slate-600 #475569 on Vayu-50 #f0fdfa', '#475569', '#f0fdfa'],
+  ['Slate-600 #475569 on Vayu-100 #ccfbf1', '#475569', '#ccfbf1'],
+  ['Slate-600 #475569 on Rose-500/8 over White #fef0f2', '#475569', '#fef0f2'],
   ['Vayu-700 #0f766e on White #ffffff', '#0f766e', '#ffffff'],
   ['Vayu-800 #115e59 on White #ffffff', '#115e59', '#ffffff'],
 ];
 
+let failed = false;
 pairs.forEach(([desc, c1, c2]) => {
   const cr = parseFloat(getContrast(c1, c2));
   const pass = cr >= 4.5 ? 'PASS (WCAG AA Normal & Large)' : cr >= 3.0 ? 'PASS (WCAG AA Large & UI Components)' : 'FAIL';
+  if (cr < 3.0) failed = true;
   console.log(`${desc}: ${cr}:1 -> ${pass}`);
 });
+if (failed) process.exit(1);

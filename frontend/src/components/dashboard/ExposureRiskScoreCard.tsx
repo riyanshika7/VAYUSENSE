@@ -46,7 +46,7 @@ export const ExposureRiskScoreCard: React.FC<ExposureRiskScoreCardProps> = ({
     <div className="rounded-2xl bg-white border border-slate-200/90 shadow-sm p-6">
       <div className="flex items-center justify-between pb-4 border-b border-slate-100">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4 text-vayu-600" />
             Deterministic Exposure Intelligence
           </span>
@@ -66,10 +66,10 @@ export const ExposureRiskScoreCard: React.FC<ExposureRiskScoreCardProps> = ({
             <span className="text-5xl font-extrabold font-mono tracking-tight text-slate-900">
               {riskScore.toFixed(1)}
             </span>
-            <span className="text-sm font-semibold text-slate-400">/ 100</span>
+            <span className="text-sm font-semibold text-slate-500">/ 100</span>
           </div>
           <div className="text-right">
-            <span className="text-xs text-slate-400 block font-medium">Confidence Rating</span>
+            <span className="text-xs text-slate-500 block font-medium">Confidence Rating</span>
             <span className="text-sm font-bold text-slate-700 font-mono">
               {(confidenceScore * 100).toFixed(0)}% ({freshnessIndicator})
             </span>
@@ -93,7 +93,7 @@ export const ExposureRiskScoreCard: React.FC<ExposureRiskScoreCardProps> = ({
         </div>
 
         {/* Scale Benchmarks */}
-        <div className="flex justify-between text-[10px] text-slate-400 font-medium mt-1.5 px-0.5">
+        <div className="flex justify-between text-[10px] text-slate-500 font-medium mt-1.5 px-0.5">
           <span>0 (Low)</span>
           <span>20</span>
           <span>40 (Moderate)</span>
@@ -134,37 +134,37 @@ export const ExposureRiskScoreCard: React.FC<ExposureRiskScoreCardProps> = ({
             <div id="exposure-risk-breakdown" className="mt-3 space-y-2.5 text-xs text-slate-600 bg-slate-50/60 p-3.5 rounded-xl border border-slate-100">
               <div className="grid grid-cols-2 gap-2 pb-2 border-b border-slate-200/60">
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Base Ambient AQI:</span>
+                  <span className="text-slate-500 block text-[11px]">Base Ambient AQI:</span>
                   <strong className="font-mono text-slate-800">
                     +{breakdown.base_aqi_component} pts
                   </strong>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Vulnerability Multiplier:</span>
+                  <span className="text-slate-500 block text-[11px]">Vulnerability Multiplier:</span>
                   <strong className="font-mono text-slate-800">
                     ×{breakdown.vulnerability_factor}
                   </strong>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Exposure Duration:</span>
+                  <span className="text-slate-500 block text-[11px]">Exposure Duration:</span>
                   <strong className="font-mono text-slate-800">
                     +{breakdown.exposure_duration_score} pts
                   </strong>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Activity & Timing:</span>
+                  <span className="text-slate-500 block text-[11px]">Activity & Timing:</span>
                   <strong className="font-mono text-slate-800">
                     +{breakdown.activity_timing_score} pts
                   </strong>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Indoor Modulation:</span>
+                  <span className="text-slate-500 block text-[11px]">Indoor Modulation:</span>
                   <strong className={`font-mono ${breakdown.indoor_environment_score < 0 ? 'text-emerald-700' : 'text-slate-800'}`}>
                     {breakdown.indoor_environment_score > 0 ? `+${breakdown.indoor_environment_score}` : breakdown.indoor_environment_score} pts
                   </strong>
                 </div>
                 <div>
-                  <span className="text-slate-400 block text-[11px]">Freshness Uncertainty:</span>
+                  <span className="text-slate-500 block text-[11px]">Freshness Uncertainty:</span>
                   <strong className="font-mono text-slate-800">
                     +{breakdown.freshness_penalty} pts
                   </strong>
