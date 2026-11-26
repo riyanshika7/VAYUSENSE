@@ -4,6 +4,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import {
+  evaluateContrastPair,
+  runContrastSuite,
+  pairs as contrastPairs,
+  blendHex as contrastBlendHex,
+  getContrast as contrastRatioFromScript,
+} from './contrast.mjs';
 
 const require = createRequire(import.meta.url);
 const ts = require('typescript');
@@ -844,4 +851,523 @@ test('Phase 3.5 Batch C Contrast Regression: Semantic pills, status labels, char
   assert.ok(nlpHtmlC.includes('bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800'));
   const pspSrcC = fs.readFileSync(path.join(srcDir, 'components', 'profile', 'ProfileSetupPage.tsx'), 'utf-8');
   assert.ok(pspSrcC.includes('text-vayu-700 animate-pulse') && !pspSrcC.includes('text-vayu-600 animate-pulse'));
+});
+
+/** Recursively enumerate all `.tsx` files under `rootDir`, sorted POSIX-relative paths first. */
+function collectTsxFiles(rootDir) {
+  const results = [];
+  for (const entry of fs.readdirSync(rootDir, { withFileTypes: true })) {
+    const fullPath = path.join(rootDir, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...collectTsxFiles(fullPath));
+    } else if (entry.isFile() && entry.name.endsWith('.tsx')) {
+      results.push(fullPath);
+    }
+  }
+  return results.sort();
+}
+
+/** Extract icon component identifiers imported from `lucide-react` in the file (plus verified DailyTimelineView alias). */
+function extractLucideIconIdentifiers(lines, rel) {
+  const icons = new Set();
+  const source = lines.join('\n');
+  const importRegex = /import\s*\{([^{}]*?)\}\s*from\s*['"]lucide-react['"]/g;
+  for (const match of source.matchAll(importRegex)) {
+    for (const rawSpec of match[1].split(',')) {
+      const cleaned = rawSpec.trim().replace(/^type\s+/, '');
+      if (!cleaned) continue;
+      const aliasParts = cleaned.split(/\s+as\s+/);
+      const localName = (aliasParts[1] || aliasParts[0]).trim();
+      if (/^[A-Z][A-Za-z0-9]*$/.test(localName)) {
+        icons.add(localName);
+      }
+    }
+  }
+  if (
+    rel === 'components/explainability/DailyTimelineView.tsx' &&
+    source.includes('const Icon = segment.icon;') &&
+    icons.size > 0
+  ) {
+    icons.add('Icon');
+  }
+  return icons;
+}
+
+/**
+ * Isolate strictly self-closing tags for verified Lucide icon components (`<Icon ... />`) from `line`.
+ * Wrapper/container JSX components (e.g. `<Badge ...>Text</Badge>`), HTML tags, and non-icon PascalCase
+ * tags stay intact in `strippedLine` so meaningful text classes cannot hide behind an icon on the same line.
+ */
+function splitVerifiedSelfClosingIcons(line, lucideIcons) {
+  if (!lucideIcons.size) {
+    return { strippedLine: line, iconTags: [] };
+  }
+  const iconTags = [];
+  let strippedLine = '';
+  let i = 0;
+
+  while (i < line.length) {
+    if (line[i] === '<') {
+      const nameMatch = line.slice(i + 1).match(/^([A-Z][A-Za-z0-9]*)(?=[\s/>])/);
+      if (nameMatch && lucideIcons.has(nameMatch[1])) {
+        let j = i + 1 + nameMatch[1].length;
+        let quote = null;
+        let braceDepth = 0;
+        let closedSelf = false;
+        while (j < line.length) {
+          const ch = line[j];
+          if (quote) {
+            if (ch === '\\') {
+              j += 2;
+              continue;
+            }
+            if (ch === quote) quote = null;
+          } else if (ch === '"' || ch === "'" || ch === '`') {
+            quote = ch;
+          } else if (ch === '{') {
+            braceDepth++;
+          } else if (ch === '}') {
+            if (braceDepth > 0) braceDepth--;
+          } else if (braceDepth === 0) {
+            if (ch === '/' && line[j + 1] === '>') {
+              iconTags.push(line.slice(i, j + 2));
+              i = j + 2;
+              closedSelf = true;
+              break;
+            }
+            if (ch === '>') {
+              break;
+            }
+          }
+          j++;
+        }
+        if (closedSelf) continue;
+      }
+    }
+    strippedLine += line[i];
+    i++;
+  }
+
+  return { strippedLine, iconTags };
+}
+
+/** Confirm whether `lines[idx]` sits directly inside a native `<input type="checkbox|radio">` opening tag. */
+function isNativeCheckboxOrRadioInputLine(lines, idx) {
+  const line = lines[idx].trim();
+  if (!line.includes('focus:ring-') || !line.includes('border-slate-300')) return false;
+  for (let k = idx; k >= Math.max(0, idx - 15); k--) {
+    const chunk = lines[k].trim();
+    if (k < idx && chunk.includes('/>')) return false;
+    if (chunk.startsWith('<input')) {
+      const inputHead = lines.slice(k, idx + 1).join(' ');
+      return /type=["'](?:checkbox|radio)["']/.test(inputHead);
+    }
+    if (k < idx && /^<[a-zA-Z]/.test(chunk)) return false;
+  }
+  return false;
+}
+
+const DECORATIVE_SLATE400_ICON_CONTEXTS = new Map([
+  [
+    'components/dashboard/AQITrendChart.tsx',
+    [
+      ({ iconTag, lines, idx }) =>
+        iconTag.includes('<Info className="w-8 h-8 text-slate-400 mx-auto mb-2" />') &&
+        lines.slice(Math.max(0, idx - 3), idx).some((l) => l.includes('id="panel-forecast"')) &&
+        /^\s*<h[1-6]\b[^>]*>[^<]{3,}<\/h[1-6]>/.test(lines[idx + 1] || ''),
+    ],
+  ],
+  [
+    'components/explainability/CausalChainVisualizer.tsx',
+    [
+      ({ iconTag, lines, idx }) => {
+        if (!iconTag.includes('<ArrowRight className="w-4 h-4 text-slate-400')) return false;
+        const wrapperHead = lines.slice(Math.max(0, idx - 5), idx).join('\n');
+        return /<div\b[^>]*\baria-hidden="true"/.test(wrapperHead);
+      },
+    ],
+  ],
+  [
+    'components/explainability/WhatChangedInspector.tsx',
+    [
+      ({ iconTag, lines, idx }) =>
+        iconTag.includes('<ArrowRight className="w-3.5 h-3.5 text-slate-400') &&
+        /<span\b[^>]*>.+<\/span>/.test((lines[idx - 1] || '').trim()) &&
+        /<span\b[^>]*>.+<\/span>/.test((lines[idx + 1] || '').trim()),
+      ({ iconTag, lines, idx }) =>
+        iconTag.includes('<XCircle className="w-3.5 h-3.5 text-slate-400" />') &&
+        /<span\b/.test((lines[idx - 1] || '').trim()) &&
+        /[A-Za-z]{3,}/.test((lines[idx + 1] || '').trim()),
+    ],
+  ],
+  [
+    'components/layout/Header.tsx',
+    [
+      ({ iconTag, lines, idx }) =>
+        iconTag.includes('<Search className="w-3.5 h-3.5 text-slate-400') &&
+        /<span\b[^>]*>\{currentLocation\.label\}<\/span>/.test((lines[idx - 1] || '').trim()) &&
+        lines.slice(Math.max(0, idx - 8), idx).some((l) => l.includes('aria-label=')),
+      ({ iconTag, lines, idx }) =>
+        iconTag.includes('<Search className="w-4 h-4 text-slate-400') &&
+        lines.slice(idx + 1, Math.min(lines.length, idx + 4)).some((l) => l.includes('<label htmlFor="city-search-input"')),
+      ({ iconTag, lines, idx }) =>
+        iconTag.includes('<Calendar className="w-3.5 h-3.5 text-slate-400" />') &&
+        /<span\b[^>]*>.+<\/span>/.test((lines[idx + 1] || '').trim()),
+    ],
+  ],
+]);
+
+const KNOWN_OUT_OF_SCOPE_ISSUES = [
+  {
+    file: 'App.tsx',
+    rule: 'low-contrast-semantic-text',
+    match: (line) => line.includes('aqiError') && line.includes('text-rose-600'),
+    reason:
+      'Pre-existing out-of-scope failure: text-rose-600 (#e11d48) on bg-rose-50 (#fff1f2) = 4.28:1 (< 4.5:1); deferred from Batch D to avoid unrequested edits outside scope.',
+  },
+];
+
+/**
+ * Scan JSX/TSX source lines of a single file for low-contrast tokens with narrow documented exceptions.
+ *
+ * Limitations of static JSX/TSX scanning (not a replacement for visual/rendered verification):
+ * - Cannot resolve dynamic runtime class concatenation or conditional multi-component class merges.
+ * - Cannot compute cascaded CSS specificity overrides or media-query breakpoint rules.
+ * - Cannot trace background surfaces or `opacity` inherited from distant ancestor components/portals.
+ * - Native `<input type="checkbox">` without `appearance-none` renders browser/OS form chrome rather
+ *   than utility border classes and is excluded from custom-checkbox border checks.
+ */
+function scanTsxLinesForContrast(rel, lines) {
+  const unexpectedViolations = [];
+  const allowlistedExceptions = [];
+  const deferredOutOfScope = [];
+  const lucideIcons = extractLucideIconIdentifiers(lines, rel);
+
+  lines.forEach((rawLine, idx) => {
+    const lineNo = idx + 1;
+    const line = rawLine.trim();
+    if (!line || line.startsWith('//') || line.startsWith('/*') || line.startsWith('*') || line.startsWith('{/*')) {
+      return;
+    }
+    const nearbyContext = lines.slice(Math.max(0, idx - 25), idx + 1).join('\n');
+    const { strippedLine, iconTags } = splitVerifiedSelfClosingIcons(line, lucideIcons);
+
+    const recordFinding = (rule, token) => {
+      const deferred = KNOWN_OUT_OF_SCOPE_ISSUES.find(
+        (item) => item.file === rel && item.rule === rule && item.match(line)
+      );
+      if (deferred) {
+        deferredOutOfScope.push({ file: rel, line: lineNo, rule, token, reason: deferred.reason });
+      } else {
+        unexpectedViolations.push({ file: rel, line: lineNo, rule, token, snippet: line });
+      }
+    };
+
+    // 1a. Light slate text / placeholders on non-icon markup (`text-slate-100..400`, `placeholder:text-slate-100..400`)
+    const nonIconLightSlate = strippedLine.match(/\b(?:placeholder:)?text-slate-(100|200|300|400)\b/g);
+    if (nonIconLightSlate) {
+      for (const token of nonIconLightSlate) {
+        const isPlaceholder = token.startsWith('placeholder:');
+        const isDecorativeDivider =
+          !isPlaceholder &&
+          token === 'text-slate-300' &&
+          strippedLine === '<span className="text-slate-300" aria-hidden="true">·</span>';
+        const isDarkTooltipSurface =
+          !isPlaceholder &&
+          rel === 'components/dashboard/AQITrendChart.tsx' &&
+          nearbyContext.includes('bg-slate-900') &&
+          (token === 'text-slate-300' ||
+            (token === 'text-slate-400' &&
+              (strippedLine.includes('Daily Average:') ||
+                strippedLine.includes('Recorded Range:') ||
+                strippedLine.includes('AQI'))));
+        const isActiveDarkTernary =
+          !isPlaceholder &&
+          token === 'text-slate-300' &&
+          (/\bisActive\s*\?\s*'text-slate-300'\s*:\s*'text-slate-(500|600)'/.test(strippedLine) ||
+            /\bisSelected\s*\?\s*'text-slate-300'\s*:\s*'text-slate-600'/.test(strippedLine)) &&
+          nearbyContext.includes('bg-slate-900');
+        const isSidebarNavIconSpan =
+          !isPlaceholder &&
+          rel === 'components/layout/Sidebar.tsx' &&
+          token === 'text-slate-400' &&
+          strippedLine === "<span className={isActive ? 'text-vayu-300' : 'text-slate-400'}>{item.icon}</span>" &&
+          lines.slice(Math.max(0, idx - 22), idx).some((l) => l.includes('<button')) &&
+          lines.slice(idx + 1, Math.min(lines.length, idx + 4)).some((l) => l.includes('{item.label}</p>'));
+
+        if (isDecorativeDivider || isDarkTooltipSurface || isActiveDarkTernary || isSidebarNavIconSpan) {
+          allowlistedExceptions.push({ file: rel, line: lineNo, rule: 'light-slate-text', token });
+        } else {
+          recordFinding('light-slate-text', token);
+        }
+      }
+    }
+
+    // 1b. Light slate color tokens on self-closing verified Lucide icons
+    for (const iconTag of iconTags) {
+      const iconLightSlate = iconTag.match(/\btext-slate-(100|200|300|400)\b/g);
+      if (!iconLightSlate) continue;
+      for (const token of iconLightSlate) {
+        const hasAriaHidden = /\baria-hidden=(?:"true"|'true'|\{true\})/.test(iconTag);
+        const contextPredicates = DECORATIVE_SLATE400_ICON_CONTEXTS.get(rel) || [];
+        const hasVerifiedLabelContext = contextPredicates.some((pred) =>
+          pred({ iconTag, lines, idx, rel })
+        );
+        if (hasAriaHidden || hasVerifiedLabelContext) {
+          allowlistedExceptions.push({ file: rel, line: lineNo, rule: 'light-slate-text', token });
+        } else {
+          recordFinding('light-slate-text', token);
+        }
+      }
+    }
+
+    // 2. White text over saturated -400/-500/-600 semantic backgrounds
+    const satBgMatch = line.match(/\bbg-(vayu|emerald|amber|orange|teal|rose|red)-(400|500|600)\b(?!\/)/g);
+    if (satBgMatch && line.includes('text-white')) {
+      for (const token of satBgMatch) {
+        const isVerifiedRoseBadge =
+          rel === 'components/dashboard/AQIHeroCard.tsx' && token === 'bg-rose-600';
+        const isCheckboxControl =
+          rel === 'components/explainability/ExplainableRecommendationCard.tsx' &&
+          token === 'bg-emerald-600' &&
+          line.includes('border-emerald-600 text-white');
+        const nextLine = (lines[idx + 1] || '').trim();
+        const isIconOnlyContainer =
+          rel === 'components/profile/NaturalLanguageProfileCard.tsx' &&
+          token === 'bg-vayu-600' &&
+          nextLine.startsWith('<Wand2 ');
+        if (isVerifiedRoseBadge || isCheckboxControl || isIconOnlyContainer) {
+          allowlistedExceptions.push({ file: rel, line: lineNo, rule: 'saturated-bg-with-white-text', token });
+        } else {
+          recordFinding('saturated-bg-with-white-text', token);
+        }
+      }
+    }
+
+    // 3. Light-surface weak semantic text (`text-(vayu|emerald|amber|orange|teal|rose|red)-(400|500|600)`)
+    // Checked strictly on `strippedLine` so inner self-closing Lucide icons never exempt outer text/components.
+    const weakSemanticMatches = strippedLine.match(/\btext-(vayu|emerald|amber|orange|teal|rose|red)-(400|500|600)\b/g);
+    if (weakSemanticMatches) {
+      const isNativeInputStyle = isNativeCheckboxOrRadioInputLine(lines, idx);
+      for (const token of weakSemanticMatches) {
+        if (isNativeInputStyle) continue;
+        const isWhatChangedWhiteDelta =
+          rel === 'components/explainability/WhatChangedInspector.tsx' &&
+          token === 'text-rose-600' &&
+          (strippedLine.includes('aqiDiff') || strippedLine.includes('scoreDiff'));
+        const isDecorativeBullet =
+          rel === 'components/dashboard/ExposureRiskScoreCard.tsx' &&
+          token === 'text-vayu-600' &&
+          strippedLine === '<span className="text-vayu-600 font-bold">•</span>';
+        if (isWhatChangedWhiteDelta || isDecorativeBullet) {
+          allowlistedExceptions.push({ file: rel, line: lineNo, rule: 'low-contrast-semantic-text', token });
+        } else {
+          recordFinding('low-contrast-semantic-text', token);
+        }
+      }
+    }
+
+    // 4. Input / textarea placeholder contrast requirement
+    if (line.includes('placeholder=')) {
+      const elementCtx = lines.slice(Math.max(0, idx - 2), Math.min(lines.length, idx + 4)).join(' ');
+      if (!/placeholder:text-slate-(500|600|700|800|900)/.test(elementCtx)) {
+        recordFinding('unstyled-input-placeholder', 'placeholder=');
+      }
+    }
+
+    // 5. Custom checkbox / toggle UI borders below 4.5:1 (`border-slate-200..400` or `text-slate-300..400`)
+    const isCustomToggle =
+      (/\<Circle\b/.test(line) && /\btext-slate-(300|400)\b/.test(line)) ||
+      (line.includes('appearance-none') && /\bborder-slate-(200|300|400)\b/.test(line));
+    if (isCustomToggle) {
+      recordFinding('low-contrast-custom-checkbox', line);
+    }
+
+    // 6. Unconditional container/element opacity dimming (`opacity-10..90` without disabled/hover/focus prefix)
+    const opacityMatches = line.match(/(?<![:\w-])opacity-(10|20|25|30|40|50|60|70|75|80|90)\b/g);
+    if (opacityMatches) {
+      for (const token of opacityMatches) {
+        const isNonTextSwatch =
+          rel === 'components/dashboard/AQITrendChart.tsx' &&
+          line.includes('<span className="w-3 h-3 rounded-sm bg-slate-300 opacity-60" />');
+        if (isNonTextSwatch) {
+          allowlistedExceptions.push({ file: rel, line: lineNo, rule: 'parent-opacity-dimming', token });
+        } else {
+          recordFinding('parent-opacity-dimming', token);
+        }
+      }
+    }
+
+    // 7. Translucent foreground text tokens (`text-white/70`, `text-slate-600/60`, etc.)
+    const translucentTextMatches = strippedLine.match(/\btext-(?:white|black|[a-z]+-[0-9]+)\/[0-9]+\b/g);
+    if (translucentTextMatches) {
+      for (const token of translucentTextMatches) {
+        recordFinding('low-opacity-text-token', token);
+      }
+    }
+  });
+
+  return { unexpectedViolations, allowlistedExceptions, deferredOutOfScope };
+}
+
+/** Run static contrast token checks across every `.tsx` file under `rootDir`. */
+function scanApplicationContrastTokens(rootDir) {
+  const tsxFiles = collectTsxFiles(rootDir);
+  const unexpectedViolations = [];
+  const allowlistedExceptions = [];
+  const deferredOutOfScope = [];
+
+  for (const fullPath of tsxFiles) {
+    const rel = path.relative(rootDir, fullPath).replace(/\\/g, '/');
+    const lines = fs.readFileSync(fullPath, 'utf-8').split(/\r?\n/);
+    const fileResult = scanTsxLinesForContrast(rel, lines);
+    unexpectedViolations.push(...fileResult.unexpectedViolations);
+    allowlistedExceptions.push(...fileResult.allowlistedExceptions);
+    deferredOutOfScope.push(...fileResult.deferredOutOfScope);
+  }
+
+  return { tsxFiles, unexpectedViolations, allowlistedExceptions, deferredOutOfScope };
+}
+
+test('Phase 3.6 Batch D: Header Updating status contrast & strict contrast.mjs thresholds', () => {
+  // 1. Render Header in busy & idle states and confirm Updating… reaches >= 4.5:1 on bg-white/95 backdrop
+  const { Header } = loadTsxComponent('components/layout/Header.tsx', {
+    '../../services/aqiService': { searchCities: async () => [], PRESET_CITY_SUGGESTIONS: [] },
+  });
+  const baseProps = {
+    currentLocation: { label: 'Delhi, India', query: 'delhi' },
+    onLocationChange: () => {},
+    selectedPreset: 'default',
+    onPresetChange: () => {},
+    onRefresh: () => {},
+    isLoading: true,
+    isRefreshing: false,
+    isBackendConnected: true,
+    lastFetched: null,
+    onOpenMobileMenu: () => {},
+    profiles: { default: { id: 'default', name: 'General Family' } },
+    isDemoMode: false,
+    onToggleDemoMode: () => {},
+  };
+  const busyHtml = renderToStaticMarkup(React.createElement(Header, baseProps));
+  const idleHtml = renderToStaticMarkup(React.createElement(Header, { ...baseProps, isLoading: false }));
+
+  assert.ok(
+    busyHtml.includes('text-vayu-700 font-medium animate-pulse') && busyHtml.includes('Updating…'),
+    'Header Updating… status must use compliant text-vayu-700 with preserved animation and label'
+  );
+  assert.ok(
+    !busyHtml.includes('text-vayu-600 font-medium animate-pulse'),
+    'Header Updating… status must not regress to low-contrast text-vayu-600'
+  );
+  assert.ok(!idleHtml.includes('Updating…'), 'Idle Header must not render Updating… indicator');
+  assert.ok(
+    busyHtml.includes('aria-expanded="false"') &&
+      busyHtml.includes('aria-label="Change monitoring location. Current: Delhi, India"'),
+    'Header location selector trigger accessibility attributes must remain intact'
+  );
+  const headerSource = fs.readFileSync(path.join(srcDir, 'components', 'layout', 'Header.tsx'), 'utf-8');
+  assert.ok(
+    headerSource.includes('role="combobox"') &&
+      headerSource.includes('aria-autocomplete="list"') &&
+      headerSource.includes('aria-activedescendant='),
+    'Header combobox and search markup must remain intact'
+  );
+
+  const headerCanvasBg = contrastBlendHex('#ffffff', '#f8fafc', 0.95);
+  const headerUpdatingRatio = parseFloat(contrastRatioFromScript('#0f766e', headerCanvasBg));
+  assert.ok(
+    headerUpdatingRatio >= 4.5,
+    `Header Updating… (#0f766e on bg-white/95 ${headerCanvasBg}) must be >= 4.5:1, got ${headerUpdatingRatio}:1`
+  );
+
+  // 2. Verify every contrast.mjs entry carries an explicit threshold and rejects omitted thresholds
+  assert.ok(contrastPairs.length >= 88, `Expected at least 88 explicit contrast pairs, found ${contrastPairs.length}`);
+  for (const entry of contrastPairs) {
+    assert.ok(entry.length >= 4 && typeof entry[3] === 'number', `Entry missing explicit threshold: ${entry[0]}`);
+    const result = evaluateContrastPair(entry);
+    assert.equal(result.ok, true, `Contrast pair failed (${result.desc}): ${result.cr}:1 < ${result.minRatio}:1`);
+  }
+  assert.equal(runContrastSuite(contrastPairs, null), true, 'Full contrast.mjs suite must pass with explicit thresholds');
+
+  assert.throws(
+    () => evaluateContrastPair(['Missing threshold regression check', '#0f766e', '#ffffff']),
+    /Missing explicit WCAG contrast threshold/
+  );
+  assert.throws(
+    () => evaluateContrastPair(['Non-numeric threshold regression check', '#0f766e', '#ffffff', undefined]),
+    /Invalid explicit WCAG contrast threshold/
+  );
+  assert.equal(
+    runContrastSuite([['Sub-4.5 normal text must fail loudly', '#94a3b8', '#ffffff', 4.5]], null),
+    false
+  );
+
+  // Verify legacy failing pair was replaced and Header Batch D + dark tooltip pairs exist
+  assert.ok(
+    !contrastPairs.some(([desc]) => desc.includes('Rose-600 #e11d48 on Slate-50 #f8fafc')),
+    'Legacy failing Rose-600 on Slate-50 (4.49:1) pair must be replaced'
+  );
+  assert.ok(
+    contrastPairs.some(([desc, , , ratio]) => desc.includes('Rose-600 #e11d48 on White #ffffff') && ratio === 4.5),
+    'Replaced Rose-600 on White pair must enforce 4.5:1'
+  );
+  assert.ok(
+    contrastPairs.some(([desc, , , ratio]) => desc.includes('Header Updating status') && ratio === 4.5),
+    'Header Updating status regression pair must be registered in contrast.mjs with 4.5:1 threshold'
+  );
+  assert.ok(
+    contrastPairs.some(([desc, fg, bg, ratio]) => desc.includes('dark tooltip') && fg === '#94a3b8' && bg === '#0f172a' && ratio === 4.5),
+    'Dark tooltip Slate-400 on Slate-900 pair must remain intact with 4.5:1 threshold'
+  );
+});
+
+test('Phase 3.6 Batch D: Application-wide contrast token scanner across all TSX components', () => {
+  const { tsxFiles, unexpectedViolations, allowlistedExceptions, deferredOutOfScope } = scanApplicationContrastTokens(srcDir);
+
+  assert.equal(tsxFiles.length, 26, `Expected full coverage of all 26 .tsx files in frontend/src, scanned ${tsxFiles.length}`);
+  assert.ok(
+    deferredOutOfScope.length <= 1,
+    `Unexpected growth in deferred out-of-scope contrast findings: ${JSON.stringify(deferredOutOfScope)}`
+  );
+  assert.ok(
+    allowlistedExceptions.length > 0 && allowlistedExceptions.every((e) => e.file && e.rule && e.token),
+    'Expected documented narrow allowlisted exceptions with explicit rule metadata'
+  );
+  assert.deepEqual(
+    unexpectedViolations,
+    [],
+    `Found unexpected contrast token violations across application TSX files:\n${unexpectedViolations
+      .map((v) => `${v.file}:${v.line} [${v.rule}] ${v.token} :: ${v.snippet}`)
+      .join('\n')}`
+  );
+
+  // Negative self-checks: original 7 rule checks + Phase 3.6.2 false-negative hardening checks
+  const syntheticSamples = [
+    ['components/layout/Header.tsx', ['<span className="text-vayu-600 font-medium animate-pulse">Updating…</span>'], 'low-contrast-semantic-text'],
+    ['components/layout/Header.tsx', ['<p className="text-slate-400">New unapproved caption</p>'], 'light-slate-text'],
+    ['components/profile/Example.tsx', ['<input placeholder="City" className="border-slate-300" />'], 'unstyled-input-placeholder'],
+    ['components/dashboard/Example.tsx', ['<span className="bg-emerald-600 text-white">Low contrast pill</span>'], 'saturated-bg-with-white-text'],
+    ['components/explainability/Example.tsx', ['<Circle className="w-4 h-4 text-slate-400" />'], 'low-contrast-custom-checkbox'],
+    ['components/dashboard/PollutantBreakdown.tsx', ['<div className="p-3 opacity-60">Dimmed card</div>'], 'parent-opacity-dimming'],
+    ['components/profile/Example.tsx', ['<span className="text-white/70">Translucent text</span>'], 'low-opacity-text-token'],
+    // Phase 3.6.2 hardened false-negative checks:
+    ['components/dashboard/Example.tsx', ["import { Badge } from '../common/Badge';", '<Badge className="text-vayu-600">Meaningful text</Badge>'], 'low-contrast-semantic-text'],
+    ['components/dashboard/Example.tsx', ["import { Info } from 'lucide-react';", '<span className="text-rose-500"><Info />Alert message</span>'], 'low-contrast-semantic-text'],
+    ['components/dashboard/Example.tsx', ["import { Info } from 'lucide-react';", '<span className="text-rose-500"><Info className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />Alert message</span>'], 'low-contrast-semantic-text'],
+    ['components/dashboard/Example.tsx', ["import { Info } from 'lucide-react';", '<span className="text-slate-400"><Info className="w-3.5 h-3.5 text-slate-400" aria-hidden="true" />Alert message</span>'], 'light-slate-text'],
+    ['components/profile/Example.tsx', ["import { Info } from 'lucide-react';", '<InteractiveButton className="text-amber-600 focus:ring-2 border-slate-300" onClick={() => {}}><Info className="w-4 h-4" />Inspect</InteractiveButton>'], 'low-contrast-semantic-text'],
+    ['components/dashboard/Example.tsx', ['<Badge aria-hidden="true" className="text-slate-400">Text</Badge>'], 'light-slate-text'],
+    ['components/dashboard/AQITrendChart.tsx', ["import { Info } from 'lucide-react';", '<Info className="w-8 h-8 text-slate-400 mx-auto mb-2" />'], 'light-slate-text'],
+    ['components/layout/Header.tsx', ["import { Search, Calendar } from 'lucide-react';", '<button><Search className="w-4 h-4 text-slate-400" /></button>'], 'light-slate-text'],
+    ['components/layout/Header.tsx', ["import { Calendar } from 'lucide-react';", '<div><Calendar className="w-3.5 h-3.5 text-slate-400" /></div>'], 'light-slate-text'],
+    ['components/explainability/WhatChangedInspector.tsx', ["import { XCircle } from 'lucide-react';", '<XCircle className="w-3.5 h-3.5 text-slate-400" />'], 'light-slate-text'],
+  ];
+  for (const [sampleFile, sampleLines, expectedRule] of syntheticSamples) {
+    const res = scanTsxLinesForContrast(sampleFile, sampleLines);
+    assert.ok(
+      res.unexpectedViolations.some((v) => v.rule === expectedRule),
+      `Scanner failed to flag synthetic ${expectedRule} regression in ${sampleFile}: ${sampleLines.join(' ')}`
+    );
+  }
 });

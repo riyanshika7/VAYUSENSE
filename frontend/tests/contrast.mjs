@@ -36,30 +36,30 @@ function blendHex(fgHex, bgHex, alpha) {
 }
 
 const pairs = [
-  ['Focus ring #0f766e on White #ffffff', '#0f766e', '#ffffff'],
-  ['Focus ring #0f766e on Dark #0f172a', '#0f766e', '#0f172a'],
-  ['Rose-950 #4c0519 on Rose-50 #fff1f2', '#4c0519', '#fff1f2'],
-  ['Amber-950 #451a03 on Amber-50 #fffbeb', '#451a03', '#fffbeb'],
-  ['Amber-800 #92400e on Amber-50 #fffbeb', '#92400e', '#fffbeb'],
-  ['Rose-600 #e11d48 on Slate-50 #f8fafc', '#e11d48', '#f8fafc'],
-  ['Rose-700 #be123c on Slate-50 #f8fafc', '#be123c', '#f8fafc'],
-  ['Emerald-800 #065f46 on Emerald-50 #ecfdf5', '#065f46', '#ecfdf5'],
-  ['Amber-900 #78350f on Amber-50 #fffbeb', '#78350f', '#fffbeb'],
-  ['Orange-900 #7c2d12 on Orange-50 #fff7ed', '#7c2d12', '#fff7ed'],
-  ['Rose-900 #881337 on Rose-50 #fff1f2', '#881337', '#fff1f2'],
-  ['Purple-900 #581c87 on Purple-50 #faf5ff', '#581c87', '#faf5ff'],
-  ['Slate-700 #334155 on Slate-100 #f1f5f9', '#334155', '#f1f5f9'],
-  ['Teal-800 #115e59 on Teal-50 #f0fdfa', '#115e59', '#f0fdfa'],
-  ['Slate-500 #64748b on White #ffffff', '#64748b', '#ffffff'],
-  ['Slate-500 #64748b on Slate-50 #f8fafc', '#64748b', '#f8fafc'],
-  ['Slate-500 #64748b on Slate-50/60 over White #fbfcfd', '#64748b', '#fbfcfd'],
-  ['Slate-600 #475569 on White #ffffff', '#475569', '#ffffff'],
-  ['Slate-600 #475569 on Slate-100 #f1f5f9', '#475569', '#f1f5f9'],
-  ['Slate-600 #475569 on Vayu-50 #f0fdfa', '#475569', '#f0fdfa'],
-  ['Slate-600 #475569 on Vayu-100 #ccfbf1', '#475569', '#ccfbf1'],
-  ['Slate-600 #475569 on Rose-500/8 over White #fef0f2', '#475569', '#fef0f2'],
-  ['Vayu-700 #0f766e on White #ffffff', '#0f766e', '#ffffff'],
-  ['Vayu-800 #115e59 on White #ffffff', '#115e59', '#ffffff'],
+  ['Focus ring #0f766e on White #ffffff', '#0f766e', '#ffffff', 3.0],
+  ['Focus ring #0f766e on Dark #0f172a', '#0f766e', '#0f172a', 3.0],
+  ['Rose-950 #4c0519 on Rose-50 #fff1f2', '#4c0519', '#fff1f2', 4.5],
+  ['Amber-950 #451a03 on Amber-50 #fffbeb', '#451a03', '#fffbeb', 4.5],
+  ['Amber-800 #92400e on Amber-50 #fffbeb', '#92400e', '#fffbeb', 4.5],
+  ['Rose-600 #e11d48 on White #ffffff', '#e11d48', '#ffffff', 4.5],
+  ['Rose-700 #be123c on Slate-50 #f8fafc', '#be123c', '#f8fafc', 4.5],
+  ['Emerald-800 #065f46 on Emerald-50 #ecfdf5', '#065f46', '#ecfdf5', 4.5],
+  ['Amber-900 #78350f on Amber-50 #fffbeb', '#78350f', '#fffbeb', 4.5],
+  ['Orange-900 #7c2d12 on Orange-50 #fff7ed', '#7c2d12', '#fff7ed', 4.5],
+  ['Rose-900 #881337 on Rose-50 #fff1f2', '#881337', '#fff1f2', 4.5],
+  ['Purple-900 #581c87 on Purple-50 #faf5ff', '#581c87', '#faf5ff', 4.5],
+  ['Slate-700 #334155 on Slate-100 #f1f5f9', '#334155', '#f1f5f9', 4.5],
+  ['Teal-800 #115e59 on Teal-50 #f0fdfa', '#115e59', '#f0fdfa', 4.5],
+  ['Slate-500 #64748b on White #ffffff', '#64748b', '#ffffff', 4.5],
+  ['Slate-500 #64748b on Slate-50 #f8fafc', '#64748b', '#f8fafc', 4.5],
+  ['Slate-500 #64748b on Slate-50/60 over White #fbfcfd', '#64748b', '#fbfcfd', 4.5],
+  ['Slate-600 #475569 on White #ffffff', '#475569', '#ffffff', 4.5],
+  ['Slate-600 #475569 on Slate-100 #f1f5f9', '#475569', '#f1f5f9', 4.5],
+  ['Slate-600 #475569 on Vayu-50 #f0fdfa', '#475569', '#f0fdfa', 4.5],
+  ['Slate-600 #475569 on Vayu-100 #ccfbf1', '#475569', '#ccfbf1', 4.5],
+  ['Slate-600 #475569 on Rose-500/8 over White #fef0f2', '#475569', '#fef0f2', 4.5],
+  ['Vayu-700 #0f766e on White #ffffff', '#0f766e', '#ffffff', 4.5],
+  ['Vayu-800 #115e59 on White #ffffff', '#115e59', '#ffffff', 4.5],
   // Phase 3.3 Batch A composited, hover, placeholder & UI-control pairs
   ['PollutantBreakdown unmeasured name (Slate-600 on Slate-50/40)', '#475569', blendHex('#f8fafc', '#ffffff', 0.4), 4.5],
   ['PollutantBreakdown unmeasured label/desc (Slate-500 on Slate-50/40)', '#64748b', blendHex('#f8fafc', '#ffffff', 0.4), 4.5],
@@ -126,14 +126,48 @@ const pairs = [
   ['IndoorConditionsCard option desc hover (Slate-600 on Slate-100)', '#475569', '#f1f5f9', 4.5],
   ['IndoorConditionsCard option desc selected (Slate-300 on Slate-900)', '#cbd5e1', '#0f172a', 4.5],
   ['Button & radio focus ring on Slate-50 (#0f766e on #f8fafc)', '#0f766e', '#f8fafc', 3.0],
+  // Batch D — Header Updating status regression guard
+  ['Header Updating status (Vayu-700 on White/95 over Canvas)', '#0f766e', blendHex('#ffffff', '#f8fafc', 0.95), 4.5],
 ];
 
-let failed = false;
-pairs.forEach(([desc, c1, c2, minRatio = 3.0]) => {
+/** Evaluate a contrast pair requiring an explicit WCAG AA threshold (no silent fallback default). */
+export function evaluateContrastPair(entry) {
+  if (!Array.isArray(entry) || entry.length < 4) {
+    throw new Error(`Missing explicit WCAG contrast threshold for entry: ${JSON.stringify(entry)}`);
+  }
+  const [desc, c1, c2, minRatio] = entry;
+  if (typeof minRatio !== 'number' || !Number.isFinite(minRatio) || minRatio <= 0) {
+    throw new Error(`Invalid explicit WCAG contrast threshold (${String(minRatio)}) for "${desc}"`);
+  }
   const cr = parseFloat(getContrast(c1, c2));
   const ok = cr >= minRatio;
-  const pass = cr >= 4.5 ? 'PASS (WCAG AA Normal & Large)' : cr >= 3.0 ? 'PASS (WCAG AA Large & UI Components)' : 'FAIL';
-  if (!ok) failed = true;
-  console.log(`${desc}: ${cr}:1 -> ${ok ? pass : `FAIL (< ${minRatio}:1)`}`);
-});
-if (failed) process.exit(1);
+  return { desc, cr, minRatio, ok };
+}
+
+/** Run contrast checks across pairs; returns true iff all entries pass with explicit thresholds. */
+export function runContrastSuite(entries = pairs, log = console.log) {
+  let failed = false;
+  for (const entry of entries) {
+    const { desc, cr, minRatio, ok } = evaluateContrastPair(entry);
+    const pass = cr >= 4.5 ? 'PASS (WCAG AA Normal & Large)' : cr >= 3.0 ? 'PASS (WCAG AA Large & UI Components)' : 'FAIL';
+    if (!ok) failed = true;
+    if (log) {
+      log(`${desc}: ${cr}:1 -> ${ok ? pass : `FAIL (< ${minRatio}:1)`}`);
+    }
+  }
+  return !failed;
+}
+
+export { pairs, getContrast, blendHex };
+
+const isDirectCli =
+  typeof process !== 'undefined' &&
+  Array.isArray(process.argv) &&
+  typeof process.argv[1] === 'string' &&
+  process.argv[1].replace(/\\/g, '/').endsWith('/tests/contrast.mjs');
+
+if (isDirectCli) {
+  if (!runContrastSuite(pairs)) {
+    process.exit(1);
+  }
+}

@@ -391,7 +391,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             )}
             {isBusy && (
-              <span className="text-vayu-600 font-medium animate-pulse">Updating…</span>
+              <span className="text-vayu-700 font-medium animate-pulse">Updating…</span>
             )}
           </div>
 
