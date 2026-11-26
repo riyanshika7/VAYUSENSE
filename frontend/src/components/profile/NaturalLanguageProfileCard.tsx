@@ -123,7 +123,7 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe your household: occupants, ages, commute mode & duration, outdoor exercise timing, kitchen exhaust, air purifiers, and health sensitivities..."
-              className="w-full text-xs text-slate-800 bg-white border border-slate-300 rounded-xl p-3 focus:outline-none focus:border-vayu-600 focus:ring-1 focus:ring-vayu-600 shadow-inner resize-none"
+              className="w-full text-xs text-slate-800 bg-white border border-slate-300 rounded-xl p-3 placeholder:text-slate-500 focus:outline-none focus:border-vayu-600 focus:ring-1 focus:ring-vayu-600 shadow-inner resize-none"
             />
           </div>
 

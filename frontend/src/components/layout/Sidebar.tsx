@@ -208,7 +208,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClose();
             }}
             aria-label="Close navigation menu"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 lg:hidden"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 lg:hidden"
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -216,7 +216,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation Menu */}
         <nav aria-label="Main Navigation" className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-          <p className="px-3 text-[11px] font-semibold uppercase text-slate-400 tracking-wider mb-2">
+          <p className="px-3 text-[11px] font-semibold uppercase text-slate-500 tracking-wider mb-2">
             Navigation
           </p>
           {navItems.map((item) => {
@@ -245,7 +245,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <p className="text-sm leading-tight truncate">{item.label}</p>
                   <p
                     className={`text-[11px] truncate leading-tight ${
-                      isActive ? 'text-slate-300' : 'text-slate-400'
+                      isActive ? 'text-slate-300' : 'text-slate-500'
                     }`}
                   >
                     {item.desc}
@@ -286,7 +286,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Footer info */}
-        <div className="px-6 py-4 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
           <span>Indian Urban Health Stack</span>
           <span className="font-mono">CPCB-Aware</span>
         </div>

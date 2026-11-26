@@ -356,3 +356,174 @@ test('Phase 3 Combobox Regression: aria-selected represents selection independen
   assert.equal(escaped.isOpen, false);
   assert.equal(escaped.selectedQuery, 'bengaluru');
 });
+
+function compositeHex(fgHex, bgHex, alpha) {
+  const [r1, g1, b1] = hexToRgb(fgHex);
+  const [r2, g2, b2] = hexToRgb(bgHex);
+  return (
+    '#' +
+    [
+      Math.round(r1 * alpha + r2 * (1 - alpha)),
+      Math.round(g1 * alpha + g2 * (1 - alpha)),
+      Math.round(b1 * alpha + b2 * (1 - alpha)),
+    ]
+      .map((v) => v.toString(16).padStart(2, '0'))
+      .join('')
+  );
+}
+
+test('Phase 3.3 Batch A Contrast Regression: Opacity removal, checkboxes, Sidebar, App hover, and placeholders', () => {
+  // 1. Alpha-compositing & WCAG AA ratio assertions for Batch A surfaces
+  const unmeasuredBg = compositeHex('#f8fafc', '#ffffff', 0.4); // bg-slate-50/40 over white
+  assert.ok(getContrastRatio('#475569', unmeasuredBg) >= 4.5, 'Unmeasured pollutant name must pass 4.5:1');
+  assert.ok(getContrastRatio('#64748b', unmeasuredBg) >= 4.5, 'Unmeasured Not reported & desc must pass 4.5:1');
+  // Regression guard: prove opacity-60 caused failure previously
+  const legacyOpacity60Bg = compositeHex('#f8fafc', '#ffffff', 0.12);
+  assert.ok(
+    getContrastRatio(compositeHex('#334155', legacyOpacity60Bg, 0.6), legacyOpacity60Bg) < 4.5,
+    'Opacity-60 with slate-700 fails 4.5:1 and must not be reintroduced'
+  );
+
+  // Checkboxes & non-text UI controls >= 3.0:1
+  assert.ok(getContrastRatio('#64748b', '#ffffff') >= 3.0, 'Unchecked checkbox border/circle must meet 3.0:1');
+  assert.ok(getContrastRatio('#334155', '#f1f5f9') >= 3.0, 'Sidebar close hover must meet 3.0:1');
+
+  // Completed recommendation card & CompletionTrackerCard
+  const completedDoneBg = compositeHex('#ecfdf5', '#ffffff', 0.6); // bg-emerald-50/60 over white
+  assert.ok(getContrastRatio('#64748b', completedDoneBg) >= 4.5, 'CompletionTrackerCard done text must pass 4.5:1');
+  assert.ok(getContrastRatio('#475569', '#f1f5f9') >= 4.5, 'Timing pill on bg-slate-100 must pass 4.5:1');
+  assert.ok(getContrastRatio('#475569', '#f8fafc') >= 4.5, 'Completed mechanism & heading on slate-50 pass 4.5:1');
+
+  // App hover & footer + placeholders
+  assert.ok(getContrastRatio('#020617', '#f59e0b') >= 4.5, 'Demo banner resting text must pass 4.5:1');
+  assert.ok(getContrastRatio('#1e293b', '#f59e0b') >= 4.5, 'Demo banner hover text must pass 4.5:1');
+  assert.ok(getContrastRatio('#475569', '#f8fafc') >= 4.5, 'Medical disclaimer footer must pass 4.5:1');
+  assert.ok(getContrastRatio('#64748b', '#ffffff') >= 4.5, 'Input placeholders must pass 4.5:1');
+
+  // 2. Render PollutantBreakdown with unmeasured sensors
+  const { PollutantBreakdown } = loadTsxComponent(path.join('components', 'dashboard', 'PollutantBreakdown.tsx'));
+  const pbHtml = renderToStaticMarkup(
+    React.createElement(PollutantBreakdown, {
+      pollutants: {
+        pm25: { value: 168, unit: 'IAQI', label: 'PM2.5' },
+        so2: null,
+        co: null,
+      },
+    })
+  );
+  assert.ok(!pbHtml.includes('opacity-60'), 'PollutantBreakdown unmeasured card must not use opacity-60');
+  assert.ok(pbHtml.includes('bg-slate-50/40 border-slate-200/70'), 'Unmeasured card must use bg-slate-50/40');
+  assert.ok(pbHtml.includes('text-slate-600'), 'Unmeasured pollutant name must preserve muted distinction cleanly');
+  assert.ok(pbHtml.includes('text-slate-500 italic">Not reported'), 'Not reported label must use text-slate-500');
+
+  // 3. Render CompletionTrackerCard with pending and completed states
+  const { CompletionTrackerCard } = loadTsxComponent(
+    path.join('components', 'explainability', 'CompletionTrackerCard.tsx')
+  );
+  const recs = [
+    {
+      action: 'Close bedroom windows before sunset',
+      reason: 'Inversion trapping',
+      expected_benefit: 'Reduces PM2.5',
+      timing: 'Evening',
+      affected_household_member: 'All members',
+      priority: 'High',
+      confidence: 'High',
+      supporting_data_rule: 'RULE_TEST_1',
+    },
+    {
+      action: 'Run bedroom purifier continuously',
+      reason: 'Clean air shield',
+      expected_benefit: 'Reduces PM2.5',
+      timing: 'Night',
+      affected_household_member: 'Seniors',
+      priority: 'Critical',
+      confidence: 'High',
+      supporting_data_rule: 'RULE_TEST_2',
+    },
+  ];
+  const trackerHtml = renderToStaticMarkup(
+    React.createElement(CompletionTrackerCard, {
+      recommendations: recs,
+      completedActionKeys: ['RULE_TEST_2'],
+      onToggleAction: () => {},
+      onResetCompleted: () => {},
+    })
+  );
+  assert.ok(!trackerHtml.includes('text-slate-300'), 'Unchecked checkbox Circle must not use text-slate-300');
+  assert.ok(!trackerHtml.includes('text-slate-400'), 'CompletionTrackerCard labels/meta must not use text-slate-400');
+
+  // 4. Render ExplainableRecommendationCard in pending & completed states (expanded to verify footer)
+  const { CausalChainVisualizer } = loadTsxComponent(
+    path.join('components', 'explainability', 'CausalChainVisualizer.tsx')
+  );
+  const { ImpactCategoryBadges } = loadTsxComponent(
+    path.join('components', 'explainability', 'ImpactCategoryBadges.tsx')
+  );
+  const { ExplainableRecommendationCard } = loadTsxComponent(
+    path.join('components', 'explainability', 'ExplainableRecommendationCard.tsx'),
+    {
+      './CausalChainVisualizer': { CausalChainVisualizer },
+      './ImpactCategoryBadges': { ImpactCategoryBadges },
+    }
+  );
+
+  const pendingCardHtml = renderToStaticMarkup(
+    React.createElement(ExplainableRecommendationCard, {
+      recommendation: recs[0],
+      isCompleted: false,
+      onToggleComplete: () => {},
+      defaultExpanded: false,
+    })
+  );
+  assert.ok(pendingCardHtml.includes('border-slate-500 bg-white'), 'Unchecked checkbox must use >=3:1 border-slate-500');
+  assert.ok(!pendingCardHtml.includes('border-slate-300 bg-white'), 'Must not revert unchecked border to slate-300');
+
+  const completedCardHtml = renderToStaticMarkup(
+    React.createElement(ExplainableRecommendationCard, {
+      recommendation: recs[0],
+      isCompleted: true,
+      onToggleComplete: () => {},
+      defaultExpanded: true,
+    })
+  );
+  assert.ok(!completedCardHtml.includes('opacity-90'), 'Completed card must not apply opacity-90 over card container');
+  assert.ok(completedCardHtml.includes('bg-slate-50'), 'Completed card must use bg-slate-50 distinction');
+  assert.ok(completedCardHtml.includes('text-slate-600 bg-slate-100'), 'Timing pill must use text-slate-600 on slate-100');
+  assert.ok(completedCardHtml.includes('text-slate-500 pt-1 border-t'), 'Rule/confidence footer must use text-slate-500');
+
+  // 5. Verify Sidebar, App.tsx, and profile input placeholder tokens
+  const { Sidebar } = loadTsxComponent(path.join('components', 'layout', 'Sidebar.tsx'));
+  const previousWindow = globalThis.window;
+  let sidebarHtml = '';
+  try {
+    globalThis.window = { matchMedia: () => ({ matches: true }) };
+    sidebarHtml = renderToStaticMarkup(
+      React.createElement(Sidebar, {
+        currentTab: 'overview',
+        onTabChange: () => {},
+        isOpen: false,
+        onClose: () => {},
+        isBackendConnected: true,
+      })
+    );
+  } finally {
+    globalThis.window = previousWindow;
+  }
+  // Remove decorative icons (svgs inside nav buttons) before verifying no text-slate-400 remains on UI/text
+  const sidebarWithoutDecorativeSvgs = sidebarHtml.replace(/<span class="text-slate-400"><svg\b[^>]*>.*?<\/svg><\/span>/g, '');
+  assert.ok(!sidebarWithoutDecorativeSvgs.includes('text-slate-400'), 'Sidebar UI/text must not use text-slate-400');
+
+  const appSrc = fs.readFileSync(path.join(srcDir, 'App.tsx'), 'utf-8');
+  assert.ok(!appSrc.includes('hover:text-white'), 'App.tsx demo banner links must not use low-contrast hover:text-white');
+  assert.ok(!appSrc.includes('text-xs text-slate-400'), 'App.tsx disclaimer & footer must not use text-slate-400');
+
+  for (const rel of [
+    path.join('components', 'profile', 'HouseholdMembersCard.tsx'),
+    path.join('components', 'profile', 'NaturalLanguageProfileCard.tsx'),
+    path.join('components', 'profile', 'ProfileSetupPage.tsx'),
+  ]) {
+    const content = fs.readFileSync(path.join(srcDir, rel), 'utf-8');
+    assert.ok(content.includes('placeholder:text-slate-500'), `${rel} must specify placeholder:text-slate-500`);
+  }
+});

@@ -80,11 +80,11 @@ export const PollutantBreakdown: React.FC<PollutantBreakdownProps> = ({ pollutan
                   ? item.critical && item.data && item.data.value > 100
                     ? 'bg-rose-50/50 border-rose-200/80'
                     : 'bg-slate-50/60 border-slate-200/70 hover:border-slate-300'
-                  : 'bg-slate-50/20 border-slate-100 opacity-60'
+                  : 'bg-slate-50/40 border-slate-200/70'
               }`}
             >
               <div className="flex items-baseline justify-between">
-                <span className="text-xs font-bold font-mono text-slate-700">
+                <span className={`text-xs font-bold font-mono ${isReported ? 'text-slate-700' : 'text-slate-600'}`}>
                   {item.name}
                 </span>
                 <span className={`text-[10px] font-medium truncate ${item.critical && item.data && item.data.value > 100 ? 'text-rose-700 font-bold' : 'text-slate-400'}`}>
@@ -98,7 +98,7 @@ export const PollutantBreakdown: React.FC<PollutantBreakdownProps> = ({ pollutan
                     {item.data?.value}
                   </span>
                 ) : (
-                  <span className="text-xs font-medium text-slate-400 italic">
+                  <span className="text-xs font-medium text-slate-500 italic">
                     Not reported
                   </span>
                 )}

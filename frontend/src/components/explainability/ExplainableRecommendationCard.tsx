@@ -90,8 +90,8 @@ export const ExplainableRecommendationCard: React.FC<ExplainableRecommendationCa
 
   return (
     <div
-      className={`rounded-2xl bg-white border border-slate-200 shadow-xs transition-all overflow-hidden ${theme.border} ${
-        isCompleted ? 'bg-slate-50/70 opacity-90' : 'hover:border-slate-300'
+      className={`rounded-2xl border border-slate-200 shadow-xs transition-all overflow-hidden ${theme.border} ${
+        isCompleted ? 'bg-slate-50' : 'bg-white hover:border-slate-300'
       }`}
     >
       <div className="p-4 sm:p-5">
@@ -109,7 +109,7 @@ export const ExplainableRecommendationCard: React.FC<ExplainableRecommendationCa
                 className={`mt-0.5 w-5 h-5 rounded-md flex items-center justify-center border transition-all shrink-0 ${
                   isCompleted
                     ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
-                    : 'border-slate-300 bg-white hover:border-slate-400'
+                    : 'border-slate-500 bg-white hover:border-slate-700'
                 }`}
                 title={isCompleted ? 'Mark as pending' : 'Mark as completed today'}
               >
@@ -126,8 +126,8 @@ export const ExplainableRecommendationCard: React.FC<ExplainableRecommendationCa
                   {recommendation.priority} Priority
                 </span>
 
-                <span className="flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                  <Clock className="w-3 h-3 text-slate-400" />
+                <span className="flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                  <Clock className="w-3 h-3 text-slate-500" aria-hidden="true" />
                   {recommendation.timing}
                 </span>
 
@@ -139,8 +139,8 @@ export const ExplainableRecommendationCard: React.FC<ExplainableRecommendationCa
 
               {/* Action Title */}
               <h4
-                className={`text-sm sm:text-base font-bold text-slate-900 leading-snug ${
-                  isCompleted ? 'line-through text-slate-500' : ''
+                className={`text-sm sm:text-base font-bold leading-snug ${
+                  isCompleted ? 'line-through text-slate-600' : 'text-slate-900'
                 }`}
               >
                 {recommendation.action}
@@ -163,7 +163,7 @@ export const ExplainableRecommendationCard: React.FC<ExplainableRecommendationCa
 
         {/* Short reason preview if collapsed */}
         {!isExpanded && (
-          <p className="text-xs text-slate-500 mt-1 line-clamp-2 pl-8">
+          <p className="text-xs text-slate-600 mt-1 line-clamp-2 pl-8">
             <strong>Mechanism:</strong> {recommendation.reason}
           </p>
         )}
@@ -189,9 +189,9 @@ export const ExplainableRecommendationCard: React.FC<ExplainableRecommendationCa
             )}
 
             {/* 4. Auditable Rule Reference Code */}
-            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-100">
+            <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100">
               <span className="flex items-center gap-1 font-mono text-[10px]">
-                <FileCode2 className="w-3 h-3 text-slate-400" />
+                <FileCode2 className="w-3 h-3 text-slate-400" aria-hidden="true" />
                 Rule: <strong>{recommendation.supporting_data_rule}</strong>
               </span>
               <span>Confidence: <strong>{recommendation.confidence}</strong></span>

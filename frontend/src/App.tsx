@@ -327,7 +327,7 @@ export const App: React.FC = () => {
         <RefreshCw className="w-4 h-4" />
         Retry
       </button>
-      <p className="text-xs text-slate-400 max-w-xs">
+      <p className="text-xs text-slate-500 max-w-xs">
         Displaying labeled design fixtures for layout evaluation while backend is offline.
       </p>
     </div>
@@ -403,7 +403,7 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setForceDemoMode(false)}
-                  className="text-[11px] underline font-extrabold hover:text-white cursor-pointer"
+                  className="text-[11px] underline font-extrabold hover:text-slate-800 cursor-pointer"
                 >
                   Switch back to Live Feed
                 </button>
@@ -411,7 +411,7 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleRefresh}
-                  className="text-[11px] underline font-bold hover:text-white cursor-pointer"
+                  className="text-[11px] underline font-bold hover:text-slate-800 cursor-pointer"
                 >
                   Retry Live Connection
                 </button>
@@ -726,7 +726,7 @@ export const App: React.FC = () => {
           )}
 
           {/* Medical disclaimer footer */}
-          <footer className="pt-6 pb-8 border-t border-slate-200/80 text-center text-xs text-slate-400 space-y-1">
+          <footer className="pt-6 pb-8 border-t border-slate-200/80 text-center text-xs text-slate-600 space-y-1">
             <p>
               VayuSense provides environmental exposure intelligence based on verified ambient
               measurements and reported household habits.

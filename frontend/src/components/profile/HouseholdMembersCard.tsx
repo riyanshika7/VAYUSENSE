@@ -218,7 +218,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
               onChange={(e) => setChildAgeInput(e.target.value)}
               placeholder="Age (e.g. 5)"
               aria-label="Child age in years (0 to 17)"
-              className="w-24 text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:border-vayu-600"
+              className="w-24 text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white placeholder:text-slate-500 focus:outline-none focus:border-vayu-600"
             />
             <button
               type="submit"

@@ -106,7 +106,7 @@ export const ProfileSetupPage: React.FC<ProfileSetupPageProps> = ({
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
               placeholder="Household Name"
-              className="text-xs font-semibold text-slate-800 px-3 py-2 rounded-xl border border-slate-300 bg-white focus:outline-none focus:border-vayu-600 shadow-inner w-44"
+              className="text-xs font-semibold text-slate-800 px-3 py-2 rounded-xl border border-slate-300 bg-white placeholder:text-slate-500 focus:outline-none focus:border-vayu-600 shadow-inner w-44"
             />
             <button
               type="submit"

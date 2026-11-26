@@ -85,7 +85,7 @@ export const CompletionTrackerCard: React.FC<CompletionTrackerCardProps> = ({
           <div className="flex items-center gap-2">
             <Award className="w-5 h-5 text-vayu-700" />
             <div>
-              <span className="text-xs text-slate-400 block font-medium">Protective Status</span>
+              <span className="text-xs text-slate-500 block font-medium">Protective Status</span>
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${rating.color}`}>
                 {rating.label} ({percentage}%)
               </span>
@@ -93,7 +93,7 @@ export const CompletionTrackerCard: React.FC<CompletionTrackerCardProps> = ({
           </div>
 
           <div className="text-right">
-            <span className="text-xs text-slate-400 block font-medium">Actions Completed</span>
+            <span className="text-xs text-slate-500 block font-medium">Actions Completed</span>
             <span className="text-sm font-extrabold font-mono text-slate-900">
               {completedCount} of {total} Complete
             </span>
@@ -141,7 +141,7 @@ export const CompletionTrackerCard: React.FC<CompletionTrackerCardProps> = ({
                 {isDone ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 ) : (
-                  <Circle className="w-4 h-4 text-slate-300" />
+                  <Circle className="w-4 h-4 text-slate-500" />
                 )}
               </div>
 
@@ -149,9 +149,9 @@ export const CompletionTrackerCard: React.FC<CompletionTrackerCardProps> = ({
                 <p className={`text-xs font-semibold leading-snug ${isDone ? 'line-through text-slate-500' : ''}`}>
                   {rec.action}
                 </p>
-                <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
-                  <span className="font-medium text-slate-500">{rec.timing}</span>
-                  <span>•</span>
+                <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
+                  <span className="font-medium text-slate-600">{rec.timing}</span>
+                  <span aria-hidden="true">•</span>
                   <span>{rec.affected_household_member}</span>
                 </div>
               </div>
