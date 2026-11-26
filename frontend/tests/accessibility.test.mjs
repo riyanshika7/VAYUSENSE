@@ -527,3 +527,95 @@ test('Phase 3.3 Batch A Contrast Regression: Opacity removal, checkboxes, Sideba
     assert.ok(content.includes('placeholder:text-slate-500'), `${rel} must specify placeholder:text-slate-500`);
   }
 });
+
+test('Phase 3.4 Batch B Contrast Regression: Muted text on light/translucent grounds, RAC-120 hover, RAC-181 chevron, and dark tooltips', () => {
+  // 1. Quantitative contrast checks (computed ratios, not token names alone)
+  const slate50Over50 = compositeHex('#f8fafc', '#ffffff', 0.5);
+  const slate50Over60 = compositeHex('#f8fafc', '#ffffff', 0.6);
+  const slate50Over70 = compositeHex('#f8fafc', '#ffffff', 0.7);
+  const timelineEmptyBg = compositeHex('#ffffff', slate50Over50, 0.6);
+  const wciGradientBg = compositeHex('#f0fdfa', '#f8fafc', 0.3);
+  const nlpGradientBg = compositeHex('#f0fdfa', '#f8fafc', 0.7);
+
+  // Proof of why slate-400 and hover slate-500 were insufficient before Batch B
+  assert.ok(getContrastRatio('#94a3b8', slate50Over50) < 3.0, 'Previous slate-400 on slate-50/50 fails 3:1 UI threshold');
+  assert.ok(getContrastRatio('#64748b', '#f1f5f9') < 4.5, 'Slate-500 on hover:bg-slate-100 fails 4.5:1 (justifies RAC-120 slate-600)');
+
+  // Passing Batch B ratios
+  assert.ok(getContrastRatio('#475569', '#f8fafc') >= 4.5, 'RAC-120 resting (slate-600 on slate-50) must pass 4.5:1');
+  assert.ok(getContrastRatio('#475569', '#f1f5f9') >= 4.5, 'RAC-120 hover (slate-600 on slate-100) must pass 4.5:1');
+  assert.ok(getContrastRatio('#cbd5e1', '#0f172a') >= 4.5, 'RAC-120 active (slate-300 on slate-900) must pass 4.5:1');
+  assert.ok(getContrastRatio('#64748b', slate50Over50) >= 3.0, 'RAC-181 chevron collapsed (slate-500 on slate-50/50) must pass 3.0:1');
+  assert.ok(getContrastRatio('#64748b', '#ffffff') >= 3.0, 'RAC-181 chevron expanded (slate-500 on white) must pass 3.0:1');
+  assert.ok(getContrastRatio('#64748b', slate50Over60) >= 4.5, 'PollutantBreakdown IAQI sublabel (slate-500 on slate-50/60) must pass 4.5:1');
+  assert.ok(getContrastRatio('#64748b', slate50Over70) >= 4.5, 'SustainableSwaps metadata (slate-500 on slate-50/70) must pass 4.5:1');
+  assert.ok(getContrastRatio('#64748b', timelineEmptyBg) >= 4.5, 'DailyTimeline empty notice (slate-500 on white/60 over slate-50/50) must pass 4.5:1');
+  assert.ok(getContrastRatio('#64748b', wciGradientBg) >= 4.5, 'WhatChangedInspector empty rules on gradient must pass 4.5:1');
+  assert.ok(getContrastRatio('#64748b', nlpGradientBg) >= 4.5, 'NaturalLanguageProfile disclaimer on gradient must pass 4.5:1');
+  assert.ok(getContrastRatio('#94a3b8', '#0f172a') >= 4.5, 'AQITrendChart dark tooltips (slate-400 on slate-900) must pass 4.5:1');
+
+  // 2. Verify SSR output of Batch B updated components & untouched dark tooltips
+  const { Badge } = loadTsxComponent(path.join('components', 'common', 'Badge.tsx'));
+  const { CausalChainVisualizer } = loadTsxComponent(
+    path.join('components', 'explainability', 'CausalChainVisualizer.tsx')
+  );
+  const { ImpactCategoryBadges } = loadTsxComponent(
+    path.join('components', 'explainability', 'ImpactCategoryBadges.tsx')
+  );
+  const { RecommendedActionsCard } = loadTsxComponent(
+    path.join('components', 'dashboard', 'RecommendedActionsCard.tsx'),
+    {
+      '../common/Badge': { Badge },
+      '../explainability/CausalChainVisualizer': { CausalChainVisualizer },
+      '../explainability/ImpactCategoryBadges': { ImpactCategoryBadges },
+    }
+  );
+  const makeAction = (title) => ({
+    action: title,
+    priority: 'High',
+    timing: '06:00 - 08:00',
+    beneficiary: 'All members',
+    trigger_condition: 'PM2.5 > 120',
+    why_now: 'Morning inversion peak',
+    expected_mechanism: 'Reduces inhalation exposure',
+  });
+  const racHtml = renderToStaticMarkup(
+    React.createElement(RecommendedActionsCard, {
+      todayRoutine: {
+        morning: { summary: 'Morning summary', actions: [makeAction('Close windows'), makeAction('Run purifier')] },
+        afternoon: { summary: 'Afternoon summary', actions: [] },
+        evening: { summary: 'Evening summary', actions: [] },
+        night: { summary: 'Night summary', actions: [] },
+      },
+      isAiGenerated: true,
+    })
+  );
+  assert.ok(racHtml.includes('text-slate-300'), 'Active timeline tab must retain text-slate-300 on bg-slate-900');
+  assert.ok(racHtml.includes('text-slate-600'), 'RAC-120 inactive tab time must use text-slate-600 for hover AA contrast');
+  assert.ok(racHtml.includes('text-slate-500 p-1'), 'RAC-181 accordion chevron must meet 3:1 with text-slate-500');
+  // Decorative icons (<User> in badge, <ArrowRight> step connectors) intentionally remain text-slate-400
+  const racWithoutDecorativeSvgs = racHtml.replace(/<svg data-icon="(?:User|ArrowRight)"[^>]*><\/svg>/g, '');
+  assert.ok(!racWithoutDecorativeSvgs.includes('text-slate-400'), 'RecommendedActionsCard text/UI must not use text-slate-400');
+
+  // Verify PollutantBreakdown remaining light-surface labels (with meteorological strip + IAQI)
+  const { PollutantBreakdown } = loadTsxComponent(path.join('components', 'dashboard', 'PollutantBreakdown.tsx'));
+  const pbFullHtml = renderToStaticMarkup(
+    React.createElement(PollutantBreakdown, {
+      pollutants: {
+        pm25: { value: 90, unit: 'IAQI', label: 'PM2.5' },
+        pm10: { value: 140, unit: 'IAQI', label: 'PM10' },
+        no2: null,
+        meteorological: { t: 24, h: 55, p: 1012, w: 2.1 },
+      },
+    })
+  );
+  assert.ok(!pbFullHtml.includes('text-slate-400'), 'PollutantBreakdown must have zero remaining text-slate-400');
+
+  // Verify AQITrendChart dark tooltips remain intact while light-surface source caption uses text-slate-500
+  const chartSrc = fs.readFileSync(path.join(srcDir, 'components', 'dashboard', 'AQITrendChart.tsx'), 'utf-8');
+  assert.ok(chartSrc.includes('bg-slate-900'), 'Dark chart tooltips must stay bg-slate-900');
+  assert.ok(chartSrc.includes('text-[11px] text-slate-500 italic'), 'Forecast source caption must use text-slate-500');
+  const darkTooltipCount = (chartSrc.match(/text-slate-400/g) || []).filter(() => true).length;
+  // Four dark tooltip text-slate-400 tokens + one decorative Info icon text-slate-400 = 5
+  assert.equal(darkTooltipCount, 5, 'AQITrendChart must preserve only the 4 dark tooltip tokens and 1 decorative Info icon');
+});

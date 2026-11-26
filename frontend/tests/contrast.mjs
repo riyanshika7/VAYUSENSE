@@ -77,6 +77,26 @@ const pairs = [
   ['Sidebar mobile close hover (Slate-700 on Slate-100)', '#334155', '#f1f5f9', 3.0],
   ['Sidebar inactive nav description hover (Slate-500 on Slate-50)', '#64748b', '#f8fafc', 4.5],
   ['Profile input placeholders (Slate-500 on White)', '#64748b', '#ffffff', 4.5],
+  // Phase 3.4 Batch B remaining muted text, hover & UI-control pairs (plus dark-tooltip exception)
+  ['PollutantBreakdown subtitle & sensors (Slate-500 on White)', '#64748b', '#ffffff', 4.5],
+  ['PollutantBreakdown IAQI sublabel (Slate-500 on Slate-50/60)', '#64748b', blendHex('#f8fafc', '#ffffff', 0.6), 4.5],
+  ['AQITrendChart forecast source note (Slate-500 on White)', '#64748b', '#ffffff', 4.5],
+  ['AQITrendChart dark tooltip labels (Slate-400 on Slate-900)', '#94a3b8', '#0f172a', 4.5],
+  ['RecommendedActions RAC-120 inactive tab desc resting (Slate-600 on Slate-50)', '#475569', '#f8fafc', 4.5],
+  ['RecommendedActions RAC-120 inactive tab desc hover (Slate-600 on Slate-100)', '#475569', '#f1f5f9', 4.5],
+  ['RecommendedActions RAC-120 active tab desc (Slate-300 on Slate-900)', '#cbd5e1', '#0f172a', 4.5],
+  ['RecommendedActions RAC-167 timing collapsed (Slate-500 on Slate-50/50)', '#64748b', blendHex('#f8fafc', '#ffffff', 0.5), 4.5],
+  ['RecommendedActions RAC-181 chevron collapsed (Slate-500 on Slate-50/50)', '#64748b', blendHex('#f8fafc', '#ffffff', 0.5), 3.0],
+  ['RecommendedActions RAC-181 chevron expanded (Slate-500 on White)', '#64748b', '#ffffff', 3.0],
+  ['SustainableSwaps habit & feasibility (Slate-500 on Slate-50/70)', '#64748b', blendHex('#f8fafc', '#ffffff', 0.7), 4.5],
+  ['CausalChain & ImpactBadges labels on completed card (Slate-500 on Slate-50)', '#64748b', '#f8fafc', 4.5],
+  ['DailyTimeline section headings (Slate-500 on Slate-50/50)', '#64748b', blendHex('#f8fafc', '#ffffff', 0.5), 4.5],
+  ['DailyTimeline empty notice (Slate-500 on White/60 over Slate-50/50)', '#64748b', blendHex('#ffffff', blendHex('#f8fafc', '#ffffff', 0.5), 0.6), 4.5],
+  ['WhatChangedInspector metric labels (Slate-500 on White)', '#64748b', '#ffffff', 4.5],
+  ['WhatChangedInspector empty rules (Slate-500 on Vayu-50/30 over Slate-50)', '#64748b', blendHex('#f0fdfa', '#f8fafc', 0.3), 4.5],
+  ['NaturalLanguageProfile disclaimer (Slate-500 on Vayu-50/70 over Slate-50)', '#64748b', blendHex('#f0fdfa', '#f8fafc', 0.7), 4.5],
+  ['Profile cards, parsed fields & schedule helpers (Slate-500 on Slate-50)', '#64748b', '#f8fafc', 4.5],
+  ['PresetSelector click-to-load label (Slate-500 on White)', '#64748b', '#ffffff', 4.5],
 ];
 
 let failed = false;

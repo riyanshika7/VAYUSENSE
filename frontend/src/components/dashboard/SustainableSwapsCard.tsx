@@ -33,7 +33,7 @@ export const SustainableSwapsCard: React.FC<SustainableSwapsCardProps> = ({ sust
           <ArrowRightLeft className="w-4 h-4 text-vayu-600" />
           Sustainable Lifestyle & Commute Swaps
         </h3>
-        <p className="text-xs text-slate-400 mt-0.5">
+        <p className="text-xs text-slate-500 mt-0.5">
           Practical substitutions that simultaneously lower personal inhalation exposure and urban emissions
         </p>
       </div>
@@ -56,7 +56,7 @@ export const SustainableSwapsCard: React.FC<SustainableSwapsCardProps> = ({ sust
               </div>
 
               {/* Current Habit */}
-              <div className="text-xs text-slate-400 mb-1">
+              <div className="text-xs text-slate-500 mb-1">
                 Current: <span className="line-through text-slate-500">{swap.current_habit}</span>
               </div>
 
@@ -72,7 +72,7 @@ export const SustainableSwapsCard: React.FC<SustainableSwapsCardProps> = ({ sust
             </div>
 
             {/* Feasibility note */}
-            <div className="mt-3 pt-2 border-t border-slate-200/60 text-[10px] text-slate-400 flex items-center gap-1">
+            <div className="mt-3 pt-2 border-t border-slate-200/60 text-[10px] text-slate-500 flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
               <span>{swap.feasibility_note}</span>
             </div>

@@ -85,7 +85,7 @@ export const WhatChangedInspector: React.FC<WhatChangedInspectorProps> = ({ delt
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* 1. Location & AQI Shift */}
         <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
             <MapPin className="w-3 h-3 text-vayu-600" />
             Location & AQI Shift
           </span>
@@ -106,7 +106,7 @@ export const WhatChangedInspector: React.FC<WhatChangedInspectorProps> = ({ delt
 
         {/* 2. Profile Persona Shift */}
         <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
             <Users className="w-3 h-3 text-vayu-600" />
             Household Persona Shift
           </span>
@@ -122,7 +122,7 @@ export const WhatChangedInspector: React.FC<WhatChangedInspectorProps> = ({ delt
 
         {/* 3. Exposure Risk Score Delta */}
         <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-xs space-y-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
             <ShieldAlert className="w-3 h-3 text-vayu-600" />
             Exposure Risk Delta
           </span>
@@ -130,7 +130,7 @@ export const WhatChangedInspector: React.FC<WhatChangedInspectorProps> = ({ delt
             <span className="text-lg font-extrabold font-mono text-slate-900">
               {delta.currRiskScore.toFixed(1)}
             </span>
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-xs text-slate-500 font-mono">
               (was {delta.prevRiskScore.toFixed(1)})
             </span>
             <span
@@ -142,7 +142,7 @@ export const WhatChangedInspector: React.FC<WhatChangedInspectorProps> = ({ delt
               {scoreDiff > 0 ? `+${scoreDiff.toFixed(1)}` : scoreDiff.toFixed(1)}
             </span>
           </div>
-          <p className="text-[10px] text-slate-400">
+          <p className="text-[10px] text-slate-500">
             0–100 deterministic risk score scale
           </p>
         </div>
@@ -174,7 +174,7 @@ export const WhatChangedInspector: React.FC<WhatChangedInspectorProps> = ({ delt
               ))}
             </ul>
           ) : (
-            <p className="text-xs text-slate-400 italic">No new protective rules triggered.</p>
+            <p className="text-xs text-slate-500 italic">No new protective rules triggered.</p>
           )}
         </div>
 
@@ -196,7 +196,7 @@ export const WhatChangedInspector: React.FC<WhatChangedInspectorProps> = ({ delt
               ))}
             </ul>
           ) : (
-            <p className="text-xs text-slate-400 italic">No existing rules deactivated.</p>
+            <p className="text-xs text-slate-500 italic">No existing rules deactivated.</p>
           )}
         </div>
       </div>

@@ -18,7 +18,7 @@ interface ImpactCategoryBadgesProps {
 export const ImpactCategoryBadges: React.FC<ImpactCategoryBadgesProps> = ({ impact }) => {
   return (
     <div className="space-y-1.5 pt-1">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
         Multi-Category Impact Dimensions:
       </span>
 

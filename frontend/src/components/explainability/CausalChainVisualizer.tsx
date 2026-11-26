@@ -75,7 +75,7 @@ export const CausalChainVisualizer: React.FC<CausalChainVisualizerProps> = ({ ca
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
           Deterministic Causal Chain:
         </span>
-        <span className="text-[10px] text-slate-400">
+        <span className="text-[10px] text-slate-500">
           Verified ambient readings + verified household schedule
         </span>
       </div>

@@ -208,7 +208,7 @@ export const DailyTimelineView: React.FC<DailyTimelineViewProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                 {/* Left Column: Scheduled Household Activities */}
                 <div className="md:col-span-5 space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
                     Your Scheduled Household Activities:
                   </span>
                   {segment.routineEvents.length > 0 ? (
@@ -224,7 +224,7 @@ export const DailyTimelineView: React.FC<DailyTimelineViewProps> = ({
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-xs text-slate-400 italic bg-white/60 p-2.5 rounded-lg border border-slate-200/50">
+                    <p className="text-xs text-slate-500 italic bg-white/60 p-2.5 rounded-lg border border-slate-200/50">
                       No high-exposure outdoor activities scheduled during this window.
                     </p>
                   )}
@@ -232,7 +232,7 @@ export const DailyTimelineView: React.FC<DailyTimelineViewProps> = ({
 
                 {/* Right Column: Timed Protective Recommendations */}
                 <div className="md:col-span-7 space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
                     Protective Actions Required During This Window:
                   </span>
                   {segment.recommendedActions.length > 0 ? (
@@ -255,7 +255,7 @@ export const DailyTimelineView: React.FC<DailyTimelineViewProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-400 italic bg-white/60 p-2.5 rounded-lg border border-slate-200/50">
+                    <p className="text-xs text-slate-500 italic bg-white/60 p-2.5 rounded-lg border border-slate-200/50">
                       Maintain standard building seal. No acute exposure actions required.
                     </p>
                   )}

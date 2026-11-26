@@ -62,7 +62,7 @@ export const PollutantBreakdown: React.FC<PollutantBreakdownProps> = ({ pollutan
             <Activity className="w-4 h-4 text-vayu-600" />
             Pollutant Concentrations & Indices
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Individual pollutant sub-indices reported by station sensors (missing sensors are marked as unmeasured)
           </p>
         </div>
@@ -87,7 +87,7 @@ export const PollutantBreakdown: React.FC<PollutantBreakdownProps> = ({ pollutan
                 <span className={`text-xs font-bold font-mono ${isReported ? 'text-slate-700' : 'text-slate-600'}`}>
                   {item.name}
                 </span>
-                <span className={`text-[10px] font-medium truncate ${item.critical && item.data && item.data.value > 100 ? 'text-rose-700 font-bold' : 'text-slate-400'}`}>
+                <span className={`text-[10px] font-medium truncate ${item.critical && item.data && item.data.value > 100 ? 'text-rose-700 font-bold' : 'text-slate-500'}`}>
                   {isReported ? (item.critical && item.data && item.data.value > 100 ? 'Elevated' : 'IAQI') : ''}
                 </span>
               </div>
@@ -115,7 +115,7 @@ export const PollutantBreakdown: React.FC<PollutantBreakdownProps> = ({ pollutan
       {/* Meteorological strip if reported */}
       {meteo && Object.keys(meteo).length > 0 && (
         <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-6 text-xs text-slate-600">
-          <span className="text-[11px] font-semibold uppercase text-slate-400 tracking-wider">
+          <span className="text-[11px] font-semibold uppercase text-slate-500 tracking-wider">
             Atmospheric Sensors:
           </span>
           {meteo.t !== undefined && (

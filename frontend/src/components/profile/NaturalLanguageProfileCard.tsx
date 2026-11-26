@@ -135,7 +135,7 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
           )}
 
           <div className="flex items-center justify-between">
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-500">
               No fields are modified until you review and confirm the detected parameters.
             </p>
             <button
@@ -183,25 +183,25 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
             {suggestion.num_adults !== undefined && (
               <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Adults</span>
+                <span className="text-[10px] text-slate-500 block">Adults</span>
                 <strong className="text-slate-800">{suggestion.num_adults}</strong>
               </div>
             )}
             {suggestion.children_ages && suggestion.children_ages.length > 0 && (
               <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Children Ages</span>
+                <span className="text-[10px] text-slate-500 block">Children Ages</span>
                 <strong className="text-slate-800">{suggestion.children_ages.join(', ')} yrs</strong>
               </div>
             )}
             {suggestion.num_older_adults !== undefined && (
               <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Seniors (60+)</span>
+                <span className="text-[10px] text-slate-500 block">Seniors (60+)</span>
                 <strong className="text-slate-800">{suggestion.num_older_adults}</strong>
               </div>
             )}
             {suggestion.has_asthma_or_respiratory_vulnerability !== undefined && (
               <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Asthma / Vulnerability</span>
+                <span className="text-[10px] text-slate-500 block">Asthma / Vulnerability</span>
                 <strong className={suggestion.has_asthma_or_respiratory_vulnerability ? 'text-rose-600' : 'text-slate-800'}>
                   {suggestion.has_asthma_or_respiratory_vulnerability ? 'Yes (Reported)' : 'None'}
                 </strong>
@@ -209,7 +209,7 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
             )}
             {suggestion.primary_commute_mode && (
               <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Commute Mode</span>
+                <span className="text-[10px] text-slate-500 block">Commute Mode</span>
                 <strong className="text-slate-800 capitalize">
                   {suggestion.primary_commute_mode.replace('_', ' ')}
                   {suggestion.commute_minutes ? ` (${suggestion.commute_minutes}m)` : ''}
@@ -218,7 +218,7 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
             )}
             {suggestion.participates_in_outdoor_exercise !== undefined && (
               <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Outdoor Exercise</span>
+                <span className="text-[10px] text-slate-500 block">Outdoor Exercise</span>
                 <strong className="text-slate-800 capitalize">
                   {suggestion.participates_in_outdoor_exercise
                     ? `${suggestion.exercise_time_of_day?.replace('_', ' ') || 'Yes'}`
@@ -228,7 +228,7 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
             )}
             {suggestion.has_kitchen_exhaust !== undefined && (
               <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Kitchen Chimney</span>
+                <span className="text-[10px] text-slate-500 block">Kitchen Chimney</span>
                 <strong className="text-slate-800">
                   {suggestion.has_kitchen_exhaust ? 'Installed' : 'Missing'}
                 </strong>
@@ -236,7 +236,7 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
             )}
             {suggestion.has_air_purifier !== undefined && (
               <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-                <span className="text-[10px] text-slate-400 block">Air Purifier</span>
+                <span className="text-[10px] text-slate-500 block">Air Purifier</span>
                 <strong className="text-slate-800">
                   {suggestion.has_air_purifier ? `Yes (${suggestion.purifier_count || 1} unit)` : 'None'}
                 </strong>

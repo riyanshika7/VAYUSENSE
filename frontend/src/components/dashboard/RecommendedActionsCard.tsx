@@ -30,7 +30,7 @@ export const RecommendedActionsCard: React.FC<RecommendedActionsCardProps> = ({
 
   if (!todayRoutine) {
     return (
-      <div className="rounded-2xl bg-white border border-slate-200 p-6 text-center text-slate-400">
+      <div className="rounded-2xl bg-white border border-slate-200 p-6 text-center text-slate-500">
         Loading personalized actions...
       </div>
     );
@@ -61,7 +61,7 @@ export const RecommendedActionsCard: React.FC<RecommendedActionsCardProps> = ({
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Diurnally synchronized health protective interventions with complete explainability audit
           </p>
         </div>
@@ -117,7 +117,7 @@ export const RecommendedActionsCard: React.FC<RecommendedActionsCardProps> = ({
                 <span className="font-semibold text-xs leading-none">{tab.label}</span>
                 {tab.icon}
               </div>
-              <span className={`text-[10px] block leading-none ${isActive ? 'text-slate-300' : 'text-slate-400'}`}>
+              <span className={`text-[10px] block leading-none ${isActive ? 'text-slate-300' : 'text-slate-600'}`}>
                 {tab.time}
               </span>
             </button>
@@ -164,7 +164,7 @@ export const RecommendedActionsCard: React.FC<RecommendedActionsCardProps> = ({
                     <Badge variant={priorityVariant} size="sm">
                       {act.priority}
                     </Badge>
-                    <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
+                    <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1">
                       <Clock className="w-3 h-3" aria-hidden="true" />
                       {act.timing}
                     </span>
@@ -178,7 +178,7 @@ export const RecommendedActionsCard: React.FC<RecommendedActionsCardProps> = ({
                   </h4>
                 </div>
 
-                <span className="text-slate-400 p-1" aria-hidden="true">
+                <span className="text-slate-500 p-1" aria-hidden="true">
                   {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </span>
               </button>

@@ -70,7 +70,7 @@ export const IndoorAirCard: React.FC<IndoorAirCardProps> = ({ indoorActions }) =
           <Home className="w-4 h-4 text-vayu-600" />
           Indoor Air Micro-Environment Actions
         </h3>
-        <p className="text-xs text-slate-400 mt-0.5">
+        <p className="text-xs text-slate-500 mt-0.5">
           Eliminate internal particulate generation and control infiltration across cooking, cleaning, and sleeping spaces
         </p>
       </div>

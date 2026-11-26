@@ -125,7 +125,7 @@ export const PresetSelector: React.FC<PresetSelectorProps> = ({
                       Active
                     </span>
                   ) : (
-                    <span className="text-[11px] text-slate-400 font-medium">Click to Load</span>
+                    <span className="text-[11px] text-slate-500 font-medium">Click to Load</span>
                   )}
                 </div>
 

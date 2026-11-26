@@ -359,7 +359,7 @@ export const AQITrendChart: React.FC<AQITrendChartProps> = ({ currentAqi, foreca
                   <span><strong>Bar:</strong> Daily Range Ceiling (Max)</span>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400 italic">
+              <p className="text-[11px] text-slate-500 italic">
                 Source: Real-time WAQI Station Telemetry array
               </p>
             </div>

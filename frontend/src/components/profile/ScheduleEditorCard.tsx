@@ -147,7 +147,7 @@ export const ScheduleEditorCard: React.FC<ScheduleEditorCardProps> = ({
                   }
                   className="w-full accent-vayu-600"
                 />
-                <div className="flex justify-between text-[10px] text-slate-400 mt-0.5">
+                <div className="flex justify-between text-[10px] text-slate-500 mt-0.5">
                   <span>10m</span>
                   <span>60m (1 hr)</span>
                   <span>120m (2 hr)</span>
@@ -167,7 +167,7 @@ export const ScheduleEditorCard: React.FC<ScheduleEditorCardProps> = ({
             )}
           </div>
         ) : (
-          <p className="text-[11px] text-slate-400 italic">
+          <p className="text-[11px] text-slate-500 italic">
             No regular outdoor commute (work from home or retired). In-transit exposure points waived.
           </p>
         )}
@@ -256,7 +256,7 @@ export const ScheduleEditorCard: React.FC<ScheduleEditorCardProps> = ({
             </div>
           </div>
         ) : (
-          <p className="text-[11px] text-slate-400 italic">
+          <p className="text-[11px] text-slate-500 italic">
             No regular outdoor exercise reported.
           </p>
         )}

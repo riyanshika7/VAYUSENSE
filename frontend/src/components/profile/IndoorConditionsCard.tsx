@@ -317,7 +317,7 @@ export const IndoorConditionsCard: React.FC<IndoorConditionsCardProps> = ({
             </label>
           </div>
         ) : (
-          <p className="text-[11px] text-slate-400 italic">
+          <p className="text-[11px] text-slate-500 italic">
             No air purifier in household. Recommendations will emphasize building envelope management and clean bedroom isolation.
           </p>
         )}

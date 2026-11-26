@@ -74,7 +74,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/70 space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-slate-800">Adults (18–59)</label>
-            <span className="text-[10px] text-slate-400">Working age</span>
+            <span className="text-[10px] text-slate-500">Working age</span>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -107,7 +107,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
               +
             </button>
           </div>
-          <p className="text-[10px] text-slate-400">Baseline biological exposure.</p>
+          <p className="text-[10px] text-slate-500">Baseline biological exposure.</p>
         </div>
 
         {/* Older Adults / Seniors */}
@@ -149,14 +149,14 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
               +
             </button>
           </div>
-          <p className="text-[10px] text-slate-400">Adds demographic vulnerability weight.</p>
+          <p className="text-[10px] text-slate-500">Adds demographic vulnerability weight.</p>
         </div>
 
         {/* Outdoor Workers */}
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/70 space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-slate-800">Outdoor Workers</label>
-            <span className="text-[10px] text-slate-400">Field work</span>
+            <span className="text-[10px] text-slate-500">Field work</span>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -189,7 +189,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
               +
             </button>
           </div>
-          <p className="text-[10px] text-slate-400">Increases duration exposure points.</p>
+          <p className="text-[10px] text-slate-500">Increases duration exposure points.</p>
         </div>
       </div>
 
@@ -253,7 +253,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
             ))}
           </div>
         ) : (
-          <p className="text-[11px] text-slate-400 italic">
+          <p className="text-[11px] text-slate-500 italic">
             No children registered in this profile.
           </p>
         )}
