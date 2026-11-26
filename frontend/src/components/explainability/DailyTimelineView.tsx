@@ -21,13 +21,11 @@ import { HouseholdProfile } from '../../types/profile';
 interface DailyTimelineViewProps {
   recommendations: RuleRecommendation[];
   profile: HouseholdProfile;
-  currentAqi?: number | null;
 }
 
 export const DailyTimelineView: React.FC<DailyTimelineViewProps> = ({
   recommendations,
   profile,
-  currentAqi,
 }) => {
   const [activeSegment, setActiveSegment] = useState<'all' | 'morning' | 'afternoon' | 'evening' | 'night'>('all');
 

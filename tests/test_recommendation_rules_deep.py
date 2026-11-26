@@ -197,6 +197,6 @@ def test_priority_sorting_integrity():
         rank_prev = priority_order[recs[i - 1].priority]
         rank_curr = priority_order[recs[i].priority]
         assert rank_prev <= rank_curr, (
-            f"Sorting violation: {recs[i-1].priority} (rank {rank_prev}) appeared after "
+            f"Sorting violation: {recs[i - 1].priority} (rank {rank_prev}) appeared after "
             f"{recs[i].priority} (rank {rank_curr})"
         )

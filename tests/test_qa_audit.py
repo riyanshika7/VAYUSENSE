@@ -300,11 +300,11 @@ async def test_qa_09_gemini_api_failure(monkeypatch):
 
     assert plan.is_fallback is True
     assert "Gemini 503 Overloaded" in (plan.fallback_reason or "")
-    assert (
-        len(plan.indoor_air_action.cooking) >= 1
-        or len(plan.personalized_alerts) >= 1
-        or len(plan.today_routine.morning.actions) >= 1
-    )
+    assert any((
+        plan.indoor_air_action.cooking,
+        plan.personalized_alerts,
+        plan.today_routine.morning.actions,
+    ))
     assert plan.exposure_risk_score == risk_result.exposure_risk_score
 
 
@@ -489,7 +489,7 @@ def test_qa_17_risk_score_monotonicity_and_bounds():
 
     # Monotonicity check: each score >= previous score
     for i in range(len(scores) - 1):
-        assert scores[i + 1] >= scores[i], f"Score decreased from AQI {levels[i]} to {levels[i+1]}"
+        assert scores[i + 1] >= scores[i], f"Score decreased from AQI {levels[i]} to {levels[i + 1]}"
 
 
 # ==============================================================================

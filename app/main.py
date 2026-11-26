@@ -3,12 +3,13 @@
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from typing import Optional
 
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
-from app.config import get_settings
+from app.config import Settings, get_settings
 from app.models.aqi import HealthResponse
 from app.routers.ai import router as ai_router
 from app.routers.aqi import router as aqi_router
@@ -44,9 +45,9 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down %s", settings.APP_NAME)
 
 
-def create_app() -> FastAPI:
+def create_app(settings: Optional[Settings] = None) -> FastAPI:
     """Create and configure the FastAPI application instance."""
-    settings = get_settings()
+    settings = settings or get_settings()
 
     app = FastAPI(
         title=settings.APP_NAME,
@@ -62,19 +63,23 @@ def create_app() -> FastAPI:
     # 1. Defensive HTTP security headers
     app.add_middleware(SecurityHeadersMiddleware)
 
-    # 2. Maximum request body limit (1 MB) to prevent DoS
+    # 2. Maximum request body limit (1 MB) including chunked transfer encoding
     app.add_middleware(RequestSizeLimitMiddleware, max_bytes=1_048_576)
 
-    # 3. Sliding-window rate limiter
-    app.add_middleware(InMemoryRateLimiter)
+    # 3. Sliding-window rate limiter with explicit proxy/edge trust
+    app.add_middleware(
+        InMemoryRateLimiter,
+        trusted_proxies=settings.TRUSTED_PROXIES,
+        trusted_client_ip_header=settings.TRUSTED_CLIENT_IP_HEADER,
+    )
 
-    # 4. Strict CORS configuration
+    # 4. Strict stateless CORS configuration (no cookies/credentials required)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
-        allow_credentials=True,
+        allow_credentials=False,
         allow_methods=["GET", "POST", "OPTIONS", "HEAD"],
-        allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+        allow_headers=["Content-Type", "Accept", "Origin"],
     )
 
     # Include routers

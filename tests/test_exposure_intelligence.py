@@ -53,7 +53,7 @@ def test_risk_score_increases_monotonically_with_aqi():
 
     for i in range(len(scores) - 1):
         assert scores[i] <= scores[i + 1], (
-            f"Expected score {scores[i]} <= {scores[i+1]} for AQI {aqi_levels[i]} vs {aqi_levels[i+1]}"
+            f"Expected score {scores[i]} <= {scores[i + 1]} for AQI {aqi_levels[i]} vs {aqi_levels[i + 1]}"
         )
 
 

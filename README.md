@@ -6,7 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4+-06B6D4?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
 [![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.5_Flash-8E75B2?logo=google&logoColor=white)](https://aistudio.google.com/)
-[![Tests](https://img.shields.io/badge/Automated_Tests-54_Passed-success)](https://pytest.org)
+[![Tests](https://img.shields.io/badge/Automated_Tests-Backend_101_%2B_Frontend_Suite-success)](https://pytest.org)
 
 > **PromptWars Challenge 6 Submission**  
 > **Live Demo:** [https://vayusense.app (Placeholder)](#)  
@@ -88,7 +88,7 @@ The architecture strictly separates deterministic science from generative reason
 - **Type Validation & Schemas:** Pydantic v2 (Strict validation for models, requests, and outputs)
 - **HTTP Client:** HTTPX 0.28 (Asynchronous HTTP connection pooling with strict timeouts)
 - **AI Engine:** Google GenAI SDK (`google-genai` / Gemini 2.5 Flash) with structured JSON schema constraints
-- **Test Suite:** Pytest + Pytest-AsyncIO (54 automated tests covering unit, integration, and failure modes)
+- **Test Suite:** Pytest + Pytest-AsyncIO + Node Test Runner (101 backend tests plus frontend unit, concurrency, accessibility, and contrast suites)
 
 ---
 
@@ -342,8 +342,12 @@ Configure the following keys in your `.env` file in the workspace root:
 | `GEMINI_REQUEST_TIMEOUT` | Float | `30.0` | Timeout in seconds for Gemini API reasoning calls. |
 | `WAQI_BASE_URL` | String | `https://api.waqi.info` | Base URL for the WAQI API gateway. |
 | `WAQI_REQUEST_TIMEOUT` | Float | `10.0` | Timeout in seconds for upstream station telemetry requests. |
-| `CORS_ORIGINS` | JSON List | `["http://localhost:5173", ...]` | Permitted origins for frontend cross-origin requests. |
+| `CORS_ORIGINS` | JSON List | `["http://localhost:5173", ...]` | Permitted origins for frontend cross-origin requests. Required without wildcards (`*`) when `ENVIRONMENT=production`. |
+| `TRUSTED_PROXIES` | JSON List | `[]` | Reverse-proxy IPs/CIDRs explicitly trusted to supply `X-Forwarded-For` client IPs (defaults strictly to direct peer). |
+| `TRUSTED_CLIENT_IP_HEADER` | String | `""` | Set to `cf-connecting-ip` on Cloudflare-fronted Render deployments to read validated `CF-Connecting-IP` instead of unverified headers. |
 | `ENVIRONMENT` | String | `development` | Deployment environment identifier (`development` or `production`). |
+
+> **Render Deployment Requirement:** Set `CORS_ORIGINS` explicitly in the Render Dashboard for `vayusense-backend` to the exact deployed frontend origin JSON array (e.g. `["https://<your-frontend-domain>"]`). Because `render.yaml` specifies `sync: false`, existing Render services will retain prior environment values until updated manually in the Dashboard; startup fails closed when `ENVIRONMENT=production` omits `CORS_ORIGINS` or contains `*`.
 
 ---
 
@@ -360,7 +364,7 @@ FastAPI automatically serves interactive Swagger UI documentation at:
 #### 2. Air Quality Telemetry
 - `GET /api/aqi?location={query}`: Fetches live air quality, pollutant sub-indices, meteorological sensors, and multi-day telemetry forecast for a city or station ID (e.g. `delhi`, `@7024`).
 - `GET /api/aqi?lat={lat}&lon={lon}`: Fetches nearest station feed by geographic coordinates.
-- `GET /api/aqi/search?keyword={query}`: Performs live autocomplete search for Indian cities and monitoring stations.
+- `GET /api/aqi/search?q={query}`: Performs live autocomplete search for Indian cities and monitoring stations.
 
 #### 3. Household Personalization & Intelligence
 - `GET /api/profile/presets`: Lists the 3 built-in demo personas (`daily_commuter`, `family`, `senior_sensitive`).
@@ -376,11 +380,15 @@ FastAPI automatically serves interactive Swagger UI documentation at:
 
 ## 15. Automated Verification & Testing
 
-VayuSense includes a comprehensive 54-test automated suite verifying every failure mode and scientific calculation:
+VayuSense includes a comprehensive automated suite (101 backend Pytest tests plus frontend service, concurrency, WCAG 2.2 AA accessibility, and contrast checks) verifying every failure mode and scientific calculation:
 
 ```bash
-# Run full backend test suite
+# Run backend test suite
 pytest -v
+
+# Run frontend unit, concurrency, accessibility, and contrast suites
+npm --prefix frontend test
+node frontend/tests/contrast.mjs
 ```
 
 ### Verified Test Categories

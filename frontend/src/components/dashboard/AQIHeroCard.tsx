@@ -30,7 +30,7 @@ interface AQIHeroCardProps {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function isSafeUrl(url?: string | null): boolean {
+export function isSafeUrl(url?: string | null): boolean {
   if (!url) return false;
   try {
     const parsed = new URL(url.trim());

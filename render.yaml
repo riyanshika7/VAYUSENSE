@@ -7,6 +7,15 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
+      - key: ENVIRONMENT
+        value: production
+      # Keep TRUSTED_CLIENT_IP_HEADER empty unless origin traffic is locked down to a verified
+      # Cloudflare Proxied custom domain (e.g. Authenticated Origin Pulls); otherwise direct
+      # .onrender.com requests could spoof CF-Connecting-IP.
+      # Operational trade-off: behind Render's load balancer without a verified proxy chain,
+      # multiple external visitors may share the same socket-peer rate-limit bucket.
+      - key: TRUSTED_CLIENT_IP_HEADER
+        value: ""
       - key: WAQI_API_TOKEN
         value: demo
       - key: GEMINI_MODEL
@@ -15,8 +24,10 @@ services:
         value: "30.0"
       - key: WAQI_REQUEST_TIMEOUT
         value: "10.0"
+      # Set CORS_ORIGINS manually in Render Dashboard to your deployed frontend origin(s), e.g. ["https://<your-frontend>"].
+      # Note: sync:false does not overwrite existing Render Environment values on redeploy.
       - key: CORS_ORIGINS
-        value: '["*"]'
+        sync: false
       - key: GEMINI_API_KEY
         sync: false
 

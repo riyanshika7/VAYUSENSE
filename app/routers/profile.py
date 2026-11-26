@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.models.profile import SAMPLE_PRESETS, HouseholdProfile
+from app.routers._helpers import resolve_household_profile
 
 router = APIRouter(prefix="/api/profile", tags=["Household Profiles"])
 
@@ -71,28 +72,20 @@ async def get_preset(preset_name: str) -> HouseholdProfile:
 )
 async def create_profile(payload: ProfileCreateRequest) -> ProfileResponse:
     """Validate and return the structured household profile."""
-    if payload.preset_name:
-        key = payload.preset_name.strip().lower()
-        if key not in SAMPLE_PRESETS:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid preset '{payload.preset_name}'. Supported presets: {list(SAMPLE_PRESETS.keys())}",
-            )
-        resolved_profile = SAMPLE_PRESETS[key]
-    elif payload.custom_profile:
-        resolved_profile = payload.custom_profile
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Must provide either 'preset_name' or 'custom_profile'.",
-        )
-
-    has_vulnerable = (
-        len(resolved_profile.children_ages) > 0
-        or resolved_profile.num_older_adults > 0
-        or resolved_profile.has_asthma_or_respiratory_vulnerability
-        or resolved_profile.has_respiratory_sensitivity
+    resolved_profile = resolve_household_profile(
+        payload.custom_profile,
+        payload.preset_name,
+        preset_error_prefix="Invalid preset",
+        missing_detail="Must provide either 'preset_name' or 'custom_profile'.",
+        prefer_preset=True,
     )
+
+    has_vulnerable = any((
+        len(resolved_profile.children_ages) > 0,
+        resolved_profile.num_older_adults > 0,
+        resolved_profile.has_asthma_or_respiratory_vulnerability,
+        resolved_profile.has_respiratory_sensitivity,
+    ))
 
     summary_parts = [
         f"Profile '{resolved_profile.profile_name}' configured with {resolved_profile.total_members} member(s): "

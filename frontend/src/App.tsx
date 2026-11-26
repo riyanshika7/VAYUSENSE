@@ -73,10 +73,8 @@ export const App: React.FC = () => {
     activeProfile,
     allProfiles,
     activeId,
-    switchProfile,
     updateProfile,
     applyPreset,
-    saveCurrentAs,
     isParsingNL,
     nlParseError,
     parsedSuggestion,
@@ -574,7 +572,6 @@ export const App: React.FC = () => {
               activePresetId={activeId}
               onSelectPreset={(presetId) => applyPreset(presetId)}
               onUpdateProfile={updateProfile}
-              onSaveAs={saveCurrentAs}
               onParseNL={parseDescription}
               isParsingNL={isParsingNL}
               nlParseError={nlParseError}
@@ -610,7 +607,6 @@ export const App: React.FC = () => {
                   <DailyTimelineView
                     recommendations={ruleRecommendations}
                     profile={activeProfile}
-                    currentAqi={displayAqi?.aqi ?? null}
                   />
 
                   {/* Phase 5: Complete Prioritized Action Cards with Expandable "Why this?" & Causal Chains */}

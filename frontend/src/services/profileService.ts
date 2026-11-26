@@ -10,6 +10,7 @@
 
 import type { HouseholdProfile } from '../types/profile';
 import { DESIGN_FIXTURE_PROFILES } from '../fixtures/designFixtures';
+import { API_BASE_URL, parseResponse } from './api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface ProfileStore {
@@ -73,7 +74,19 @@ function readStore(): ProfileStore {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return _defaultStore();
-    return JSON.parse(raw) as ProfileStore;
+    const parsed = JSON.parse(raw) as Partial<ProfileStore> | null;
+    if (
+      !parsed ||
+      typeof parsed !== 'object' ||
+      !parsed.profiles ||
+      typeof parsed.profiles !== 'object' ||
+      Array.isArray(parsed.profiles) ||
+      typeof parsed.activeId !== 'string' ||
+      !parsed.activeId
+    ) {
+      return _defaultStore();
+    }
+    return parsed as ProfileStore;
   } catch {
     return _defaultStore();
   }
@@ -132,21 +145,14 @@ export function deleteProfile(id: string): void {
 }
 
 // ─── NL description → profile fields (via backend) ───────────────────────────
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
-
 export async function parseNLDescription(description: string): Promise<ParsedProfileSuggestion> {
-  const res = await fetch(`${API_BASE}/api/ai/parse-profile`, {
+  const res = await fetch(`${API_BASE_URL}/api/ai/parse-profile`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ description }),
   });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || `Parse request failed: HTTP ${res.status}`);
-  }
-
-  return res.json();
+  return parseResponse<ParsedProfileSuggestion>(res, 'Parse request failed');
 }
 
 // ─── Merge flat parsed fields → HouseholdProfile shape ───────────────────────

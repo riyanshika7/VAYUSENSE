@@ -30,7 +30,6 @@ interface ProfileSetupPageProps {
   activePresetId: string;
   onSelectPreset: (presetId: string) => void;
   onUpdateProfile: (updater: (prev: HouseholdProfile) => HouseholdProfile) => void;
-  onSaveAs: (id: string, name: string) => void;
   onParseNL: (description: string) => Promise<void>;
   isParsingNL: boolean;
   nlParseError: string | null;
@@ -45,7 +44,6 @@ export const ProfileSetupPage: React.FC<ProfileSetupPageProps> = ({
   activePresetId,
   onSelectPreset,
   onUpdateProfile,
-  onSaveAs,
   onParseNL,
   isParsingNL,
   nlParseError,

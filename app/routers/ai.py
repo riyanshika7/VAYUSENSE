@@ -1,14 +1,11 @@
 """Router endpoints for Gemini-powered personalized reasoning."""
 
-from typing import Optional
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field
 
 from app.dependencies import get_ai_service, get_waqi_service
 from app.models.ai_response import AIPersonalizedPlan, AIPlanRequest
-from app.models.aqi import AQIResponse
-from app.models.profile import SAMPLE_PRESETS
+from app.routers._helpers import resolve_aqi_context, resolve_household_profile
 from app.services.ai_service import AIService, ParsedProfileFields
 from app.services.recommendation_rules import RecommendationRulesEngine
 from app.services.risk_engine import RiskEngine
@@ -55,30 +52,16 @@ async def generate_ai_plan(
 ) -> AIPersonalizedPlan:
     """Generate structured personalized plan with Gemini reasoning or deterministic fallback."""
     # 1. Resolve Household Profile
-    if request.profile:
-        resolved_profile = request.profile
-    elif request.preset_name:
-        key = request.preset_name.strip().lower()
-        if key not in SAMPLE_PRESETS:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown preset '{request.preset_name}'. Supported presets: {list(SAMPLE_PRESETS.keys())}",
-            )
-        resolved_profile = SAMPLE_PRESETS[key]
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Must provide either 'profile' or a valid 'preset_name'.",
-        )
+    resolved_profile = resolve_household_profile(request.profile, request.preset_name)
 
     # 2. Resolve Ambient AQI Data
-    resolved_aqi: Optional[AQIResponse] = request.aqi_data
-
-    if resolved_aqi is None:
-        if request.location:
-            resolved_aqi = await waqi_service.get_aqi_by_feed(request.location)
-        elif request.lat is not None and request.lon is not None:
-            resolved_aqi = await waqi_service.get_aqi_by_coords(request.lat, request.lon)
+    resolved_aqi = await resolve_aqi_context(
+        request.aqi_data,
+        request.location,
+        request.lat,
+        request.lon,
+        waqi_service,
+    )
 
     # 3. Deterministic Risk Assessment (Authority anchor: AI must never alter this)
     risk_result = RiskEngine.calculate_risk(resolved_profile, resolved_aqi)

@@ -6,9 +6,9 @@ import { AQIResponse, AQISearchResponse } from '../types/aqi';
 import { HouseholdProfile } from '../types/profile';
 import { AIPersonalizedPlan, RecommendationResponse } from '../types/recommendation';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-async function parseResponse<T>(res: Response, fallbackAction: string): Promise<T> {
+export async function parseResponse<T>(res: Response, fallbackAction: string): Promise<T> {
   if (!res.ok) {
     const errorData = (await res.json().catch(() => ({}))) as { detail?: string };
     throw new Error(errorData.detail || `${fallbackAction}: HTTP ${res.status}`);
