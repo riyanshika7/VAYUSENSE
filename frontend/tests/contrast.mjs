@@ -128,6 +128,8 @@ const pairs = [
   ['Button & radio focus ring on Slate-50 (#0f766e on #f8fafc)', '#0f766e', '#f8fafc', 3.0],
   // Batch D — Header Updating status regression guard
   ['Header Updating status (Vayu-700 on White/95 over Canvas)', '#0f766e', blendHex('#ffffff', '#f8fafc', 0.95), 4.5],
+  // Phase 3.6.3 — App.tsx aqiError banner foreground regression guard
+  ['App error banner aqiError message (Rose-700 #be123c on Rose-50 #fff1f2)', '#be123c', '#fff1f2', 4.5],
 ];
 
 /** Evaluate a contrast pair requiring an explicit WCAG AA threshold (no silent fallback default). */

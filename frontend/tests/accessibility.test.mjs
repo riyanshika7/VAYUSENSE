@@ -1017,15 +1017,9 @@ const DECORATIVE_SLATE400_ICON_CONTEXTS = new Map([
   ],
 ]);
 
-const KNOWN_OUT_OF_SCOPE_ISSUES = [
-  {
-    file: 'App.tsx',
-    rule: 'low-contrast-semantic-text',
-    match: (line) => line.includes('aqiError') && line.includes('text-rose-600'),
-    reason:
-      'Pre-existing out-of-scope failure: text-rose-600 (#e11d48) on bg-rose-50 (#fff1f2) = 4.28:1 (< 4.5:1); deferred from Batch D to avoid unrequested edits outside scope.',
-  },
-];
+// APP-ERR-437 resolved in Phase 3.6.3: App.tsx aqiError span updated from text-rose-600 (4.28:1)
+// to text-rose-700 (5.72:1) on bg-rose-50 (#fff1f2). No deferred contrast failures remain.
+const KNOWN_OUT_OF_SCOPE_ISSUES = [];
 
 /**
  * Scan JSX/TSX source lines of a single file for low-contrast tokens with narrow documented exceptions.
@@ -1326,9 +1320,10 @@ test('Phase 3.6 Batch D: Application-wide contrast token scanner across all TSX 
   const { tsxFiles, unexpectedViolations, allowlistedExceptions, deferredOutOfScope } = scanApplicationContrastTokens(srcDir);
 
   assert.equal(tsxFiles.length, 26, `Expected full coverage of all 26 .tsx files in frontend/src, scanned ${tsxFiles.length}`);
-  assert.ok(
-    deferredOutOfScope.length <= 1,
-    `Unexpected growth in deferred out-of-scope contrast findings: ${JSON.stringify(deferredOutOfScope)}`
+  assert.deepEqual(
+    deferredOutOfScope,
+    [],
+    `Expected zero deferred contrast findings after APP-ERR-437 resolution: ${JSON.stringify(deferredOutOfScope)}`
   );
   assert.ok(
     allowlistedExceptions.length > 0 && allowlistedExceptions.every((e) => e.file && e.rule && e.token),
@@ -1342,7 +1337,7 @@ test('Phase 3.6 Batch D: Application-wide contrast token scanner across all TSX 
       .join('\n')}`
   );
 
-  // Negative self-checks: original 7 rule checks + Phase 3.6.2 false-negative hardening checks
+  // Negative self-checks: original 7 rule checks + Phase 3.6.2 false-negative hardening + APP-ERR-437 guard
   const syntheticSamples = [
     ['components/layout/Header.tsx', ['<span className="text-vayu-600 font-medium animate-pulse">Updating…</span>'], 'low-contrast-semantic-text'],
     ['components/layout/Header.tsx', ['<p className="text-slate-400">New unapproved caption</p>'], 'light-slate-text'],
@@ -1351,6 +1346,7 @@ test('Phase 3.6 Batch D: Application-wide contrast token scanner across all TSX 
     ['components/explainability/Example.tsx', ['<Circle className="w-4 h-4 text-slate-400" />'], 'low-contrast-custom-checkbox'],
     ['components/dashboard/PollutantBreakdown.tsx', ['<div className="p-3 opacity-60">Dimmed card</div>'], 'parent-opacity-dimming'],
     ['components/profile/Example.tsx', ['<span className="text-white/70">Translucent text</span>'], 'low-opacity-text-token'],
+    ['App.tsx', ['{aqiError && <span className="text-rose-600">{aqiError}</span>}'], 'low-contrast-semantic-text'],
     // Phase 3.6.2 hardened false-negative checks:
     ['components/dashboard/Example.tsx', ["import { Badge } from '../common/Badge';", '<Badge className="text-vayu-600">Meaningful text</Badge>'], 'low-contrast-semantic-text'],
     ['components/dashboard/Example.tsx', ["import { Info } from 'lucide-react';", '<span className="text-rose-500"><Info />Alert message</span>'], 'low-contrast-semantic-text'],
@@ -1370,4 +1366,38 @@ test('Phase 3.6 Batch D: Application-wide contrast token scanner across all TSX 
       `Scanner failed to flag synthetic ${expectedRule} regression in ${sampleFile}: ${sampleLines.join(' ')}`
     );
   }
+});
+
+test('Phase 3.6.3: App.tsx aqiError banner foreground uses compliant text-rose-700', () => {
+  const appSource = fs.readFileSync(path.join(srcDir, 'App.tsx'), 'utf-8');
+
+  assert.ok(
+    appSource.includes('<div className="bg-rose-50 border-b border-rose-200 px-4 py-1.5 text-xs text-rose-800 flex items-center justify-between gap-2">'),
+    'App.tsx error banner container classes must remain preserved'
+  );
+  assert.ok(
+    appSource.includes('{aqiError && <span className="text-rose-700">{aqiError}</span>}'),
+    'App.tsx aqiError span must use accessible text-rose-700 foreground'
+  );
+  assert.ok(
+    !appSource.includes('{aqiError && <span className="text-rose-600">{aqiError}</span>}'),
+    'App.tsx aqiError span must not regress to low-contrast text-rose-600'
+  );
+
+  const errorBannerRatio = parseFloat(contrastRatioFromScript('#be123c', '#fff1f2'));
+  assert.ok(
+    errorBannerRatio >= 4.5,
+    `App.tsx error text (#be123c on bg-rose-50 #fff1f2) must reach >= 4.5:1, got ${errorBannerRatio}:1`
+  );
+  assert.ok(
+    contrastPairs.length >= 89 &&
+      contrastPairs.some(
+        ([desc, fg, bg, ratio]) =>
+          desc.includes('App error banner aqiError message') &&
+          fg === '#be123c' &&
+          bg === '#fff1f2' &&
+          ratio === 4.5
+      ),
+    'contrast.mjs must explicitly enforce Rose-700 on Rose-50 for App error banner at 4.5:1'
+  );
 });

@@ -434,7 +434,7 @@ export const App: React.FC = () => {
             <span className="flex items-center gap-2">
               <WifiOff className="w-3.5 h-3.5 shrink-0 text-rose-500" />
               Latest refresh failed — showing last known data.{' '}
-              {aqiError && <span className="text-rose-600">{aqiError}</span>}
+              {aqiError && <span className="text-rose-700">{aqiError}</span>}
             </span>
             <button onClick={handleRefresh} className="text-[11px] underline font-semibold hover:text-rose-900">
               Retry
