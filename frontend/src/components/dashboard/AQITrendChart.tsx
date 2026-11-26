@@ -375,7 +375,7 @@ export const AQITrendChart: React.FC<AQITrendChartProps> = ({ currentAqi, foreca
             <button
               type="button"
               onClick={() => setActiveTab('diurnal')}
-              className="mt-3 px-3 py-1.5 text-xs font-semibold rounded-lg bg-vayu-600 text-white hover:bg-vayu-700 transition-colors"
+              className="mt-3 px-3 py-1.5 text-xs font-semibold rounded-lg bg-vayu-700 text-white hover:bg-vayu-800 transition-colors"
             >
               Switch to 24h Diurnal Model
             </button>
@@ -414,7 +414,7 @@ export const AQITrendChart: React.FC<AQITrendChartProps> = ({ currentAqi, foreca
                     label={{
                       value: `Current: ${currentAqi}`,
                       position: 'insideTopRight',
-                      fill: '#ef4444',
+                      fill: '#b91c1c',
                       fontSize: 10,
                     }}
                   />

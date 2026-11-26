@@ -114,7 +114,7 @@ export const HouseholdMembersCard: React.FC<HouseholdMembersCardProps> = ({
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/70 space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-slate-800">Seniors (60+)</label>
-            <span className="text-[10px] font-semibold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded">
               High Risk
             </span>
           </div>

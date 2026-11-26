@@ -97,7 +97,7 @@ export const WhatChangedInspector: React.FC<WhatChangedInspectorProps> = ({ delt
           {aqiDiff !== null && (
             <p className="text-[11px] font-mono font-medium text-slate-500">
               AQI: {delta.prevAqi} → {delta.currAqi}{' '}
-              <span className={aqiDiff > 0 ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'}>
+              <span className={aqiDiff > 0 ? 'text-rose-600 font-bold' : 'text-emerald-700 font-bold'}>
                 ({aqiDiff > 0 ? `+${aqiDiff}` : aqiDiff} pts)
               </span>
             </p>
@@ -135,7 +135,7 @@ export const WhatChangedInspector: React.FC<WhatChangedInspectorProps> = ({ delt
             </span>
             <span
               className={`text-xs font-bold flex items-center gap-0.5 ml-auto font-mono ${
-                scoreDiff > 0 ? 'text-rose-600' : 'text-emerald-600'
+                scoreDiff > 0 ? 'text-rose-600' : 'text-emerald-700'
               }`}
             >
               {scoreDiff > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
@@ -185,7 +185,7 @@ export const WhatChangedInspector: React.FC<WhatChangedInspectorProps> = ({ delt
             Deactivated / Waived Rules ({delta.removedRuleTitles.length})
           </span>
           {delta.removedRuleTitles.length > 0 ? (
-            <ul className="space-y-1 text-xs text-slate-500">
+            <ul className="space-y-1 text-xs text-slate-600">
               {delta.removedRuleTitles.map((title, i) => (
                 <li
                   key={i}

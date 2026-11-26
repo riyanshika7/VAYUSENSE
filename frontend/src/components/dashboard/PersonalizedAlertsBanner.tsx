@@ -34,7 +34,7 @@ export const PersonalizedAlertsBanner: React.FC<PersonalizedAlertsBannerProps> =
                 <span className={`text-[10px] font-semibold px-2 py-0.2 rounded-full uppercase ${isWarning ? 'bg-rose-200 text-rose-800' : 'bg-amber-200 text-amber-800'}`}>
                   {alert.alert_level}
                 </span>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-slate-600">
                   • Target: <strong className="text-slate-700">{alert.affected_member}</strong>
                 </span>
               </div>

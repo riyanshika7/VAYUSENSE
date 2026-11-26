@@ -46,7 +46,7 @@ export const CausalChainVisualizer: React.FC<CausalChainVisualizerProps> = ({ ca
       icon: AlertTriangle,
       content: causalChain.detected_risk,
       color: 'bg-amber-50 border-amber-200 text-amber-900',
-      badgeColor: 'bg-amber-600 text-white',
+      badgeColor: 'bg-amber-700 text-white',
       accent: 'border-l-4 border-l-amber-500',
     },
     {
@@ -55,7 +55,7 @@ export const CausalChainVisualizer: React.FC<CausalChainVisualizerProps> = ({ ca
       icon: CheckCircle2,
       content: causalChain.recommended_action,
       color: 'bg-emerald-50 border-emerald-200 text-emerald-900',
-      badgeColor: 'bg-emerald-600 text-white',
+      badgeColor: 'bg-emerald-700 text-white',
       accent: 'border-l-4 border-l-emerald-500',
     },
     {
@@ -64,7 +64,7 @@ export const CausalChainVisualizer: React.FC<CausalChainVisualizerProps> = ({ ca
       icon: ShieldCheck,
       content: causalChain.expected_benefit,
       color: 'bg-teal-50 border-teal-200 text-teal-900',
-      badgeColor: 'bg-teal-600 text-white',
+      badgeColor: 'bg-teal-700 text-white',
       accent: 'border-l-4 border-l-teal-500',
     },
   ];

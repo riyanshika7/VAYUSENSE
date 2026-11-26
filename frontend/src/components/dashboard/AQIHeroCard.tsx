@@ -44,21 +44,21 @@ function getCategoryTheme(cat: string) {
     case 'good':
       return {
         bg: 'bg-emerald-500/8 border-emerald-200/60',
-        pill: 'bg-emerald-600 text-white',
+        pill: 'bg-emerald-700 text-white',
         badgeVariant: 'emerald' as const,
         freshnessClass: 'text-emerald-700',
       };
     case 'moderate':
       return {
         bg: 'bg-amber-500/8 border-amber-200/60',
-        pill: 'bg-amber-600 text-white',
+        pill: 'bg-amber-700 text-white',
         badgeVariant: 'amber' as const,
         freshnessClass: 'text-amber-700',
       };
     case 'unhealthy for sensitive groups':
       return {
         bg: 'bg-orange-500/8 border-orange-200/60',
-        pill: 'bg-orange-600 text-white',
+        pill: 'bg-orange-700 text-white',
         badgeVariant: 'orange' as const,
         freshnessClass: 'text-orange-700',
       };

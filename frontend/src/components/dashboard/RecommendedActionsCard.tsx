@@ -168,7 +168,7 @@ export const RecommendedActionsCard: React.FC<RecommendedActionsCardProps> = ({
                       <Clock className="w-3 h-3" aria-hidden="true" />
                       {act.timing}
                     </span>
-                    <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1">
                       <User className="w-3 h-3 text-slate-400" aria-hidden="true" />
                       {act.beneficiary}
                     </span>

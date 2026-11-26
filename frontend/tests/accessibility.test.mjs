@@ -619,3 +619,229 @@ test('Phase 3.4 Batch B Contrast Regression: Muted text on light/translucent gro
   // Four dark tooltip text-slate-400 tokens + one decorative Info icon text-slate-400 = 5
   assert.equal(darkTooltipCount, 5, 'AQITrendChart must preserve only the 4 dark tooltip tokens and 1 decorative Info icon');
 });
+
+test('Phase 3.5 Batch C Contrast Regression: Semantic pills, status labels, chart reference label, and tinted/hover badges', () => {
+  // 1. Quantitative luminance & alpha-compositing proofs (legacy failures vs compliant Batch C fixes)
+  assert.ok(getContrastRatio('#ffffff', '#059669') < 4.5, 'White on emerald-600 fails 4.5:1');
+  assert.ok(getContrastRatio('#ffffff', '#d97706') < 4.5, 'White on amber-600 fails 4.5:1');
+  assert.ok(getContrastRatio('#ffffff', '#ea580c') < 4.5, 'White on orange-600 fails 4.5:1');
+  assert.ok(getContrastRatio('#ffffff', '#0d9488') < 4.5, 'White on teal-600/vayu-600 fails 4.5:1');
+  assert.ok(getContrastRatio('#be123c', '#fff1f2') >= 4.5, 'Rose-700 on rose-50 (High Risk) must pass 4.5:1');
+  assert.ok(getContrastRatio('#e11d48', '#fff1f2') < 4.5, 'Previous rose-600 on rose-50 fails 4.5:1');
+  assert.ok(getContrastRatio('#e11d48', '#f8fafc') < 4.5, 'Previous rose-600 on slate-50 fails 4.5:1');
+  assert.ok(getContrastRatio('#be123c', '#f8fafc') >= 4.5, 'Rose-700 on slate-50 must pass 4.5:1');
+  assert.ok(getContrastRatio('#047857', '#ffffff') >= 4.5, 'Emerald-700 on white must pass 4.5:1');
+  assert.ok(getContrastRatio('#0f766e', '#ffffff') >= 4.5, 'Vayu-700 on white must pass 4.5:1');
+
+  // Saturated -700/-800 pill/button resting & hover ratios
+  for (const [label, bg] of [
+    ['Emerald-700', '#047857'],
+    ['Emerald-800', '#065f46'],
+    ['Amber-700', '#b45309'],
+    ['Orange-700', '#c2410c'],
+    ['Rose-600', '#e11d48'],
+    ['Purple-800', '#6b21a8'],
+    ['Teal-700 / Vayu-700', '#0f766e'],
+    ['Vayu-800', '#115e59'],
+  ]) {
+    assert.ok(getContrastRatio('#ffffff', bg) >= 4.5, `White on ${label} must pass 4.5:1`);
+  }
+
+  // ReferenceLine label against both pure white and peak 0.25 diurnal area fill
+  const areaTopBg = compositeHex('#0f766e', '#ffffff', 0.25);
+  assert.ok(getContrastRatio('#ef4444', '#ffffff') < 4.5, 'Previous #ef4444 chart label fails 4.5:1');
+  assert.ok(getContrastRatio('#dc2626', areaTopBg) < 4.5, '#dc2626 drops below 4.5:1 over peak diurnal area fill');
+  assert.ok(getContrastRatio('#b91c1c', '#ffffff') >= 4.5, '#b91c1c chart label must pass 4.5:1 on white');
+  assert.ok(getContrastRatio('#b91c1c', areaTopBg) >= 4.5, '#b91c1c chart label must pass 4.5:1 over peak area fill');
+  assert.ok(getContrastRatio('#ef4444', '#ffffff') >= 3.0, 'ReferenceLine dashed stroke must pass 3:1 UI contrast');
+
+  // Borderline slate-500 vs upgraded slate-600 on tinted & hover surfaces
+  const pabRoseBg = compositeHex('#fff1f2', '#f8fafc', 0.8);
+  const pabAmberBg = compositeHex('#fffbeb', '#f8fafc', 0.8);
+  const wciDeactivatedBg = compositeHex('#f1f5f9', compositeHex('#f0fdfa', '#f8fafc', 0.3), 0.7);
+  assert.ok(getContrastRatio('#64748b', '#f1f5f9') < 4.5, 'Slate-500 on slate-100 fails 4.5:1');
+  assert.ok(getContrastRatio('#64748b', pabRoseBg) < 4.5, 'Slate-500 on rose-50/80 fails 4.5:1');
+  assert.ok(getContrastRatio('#64748b', wciDeactivatedBg) < 4.5, 'Slate-500 on slate-100/70 fails 4.5:1');
+  assert.ok(getContrastRatio('#475569', '#f1f5f9') >= 4.5, 'RAC-171 / ICC-133 hover (slate-600 on slate-100) must pass 4.5:1');
+  assert.ok(getContrastRatio('#475569', pabRoseBg) >= 4.5, 'PAB-37 warning (slate-600 on rose-50/80) must pass 4.5:1');
+  assert.ok(getContrastRatio('#475569', pabAmberBg) >= 4.5, 'PAB-37 advisory (slate-600 on amber-50/80) must pass 4.5:1');
+  assert.ok(getContrastRatio('#475569', wciDeactivatedBg) >= 4.5, 'WCI-188 (slate-600 on slate-100/70) must pass 4.5:1');
+
+  // 2. SSR render checks for modified Batch C components
+  const { Badge } = loadTsxComponent(path.join('components', 'common', 'Badge.tsx'));
+  const { AQIHeroCard } = loadTsxComponent(path.join('components', 'dashboard', 'AQIHeroCard.tsx'), {
+    '../common/Badge': { Badge },
+  });
+  const makeAqiData = (category, aqi) => ({
+    location_name: 'New Delhi',
+    station_name: 'Anand Vihar',
+    station_id: 1,
+    coordinates: { latitude: 28.64, longitude: 77.31 },
+    aqi,
+    classification: { category, color_hex: '#000', health_implications: 'Test implication', scale_name: 'US EPA', methodology_note: '' },
+    dominant_pollutant: 'pm25',
+    pollutants: {},
+    source: 'WAQI',
+    attributions: [],
+    station_url: null,
+    measurement_time: '2026-11-26 12:00:00',
+    data_freshness: 'live',
+  });
+  for (const [cat, aqi, expectedPill] of [
+    ['Good', 35, 'bg-emerald-700 text-white'],
+    ['Moderate', 85, 'bg-amber-700 text-white'],
+    ['Unhealthy for Sensitive Groups', 125, 'bg-orange-700 text-white'],
+    ['Unhealthy', 180, 'bg-rose-600 text-white'],
+  ]) {
+    const html = renderToStaticMarkup(React.createElement(AQIHeroCard, { aqiData: makeAqiData(cat, aqi) }));
+    assert.ok(html.includes(expectedPill), `AQIHeroCard ${cat} pill must render ${expectedPill}`);
+    assert.ok(!html.includes('bg-emerald-600') && !html.includes('bg-amber-600') && !html.includes('bg-orange-600'));
+  }
+
+  const { CausalChainVisualizer } = loadTsxComponent(path.join('components', 'explainability', 'CausalChainVisualizer.tsx'));
+  const ccvHtml = renderToStaticMarkup(
+    React.createElement(CausalChainVisualizer, {
+      causalChain: { live_data: '1', household_context: '2', detected_risk: '3', recommended_action: '4', expected_benefit: '5' },
+    })
+  );
+  assert.ok(ccvHtml.includes('bg-amber-700 text-white'));
+  assert.ok(ccvHtml.includes('bg-emerald-700 text-white'));
+  assert.ok(ccvHtml.includes('bg-teal-700 text-white'));
+
+  const { PersonalizedAlertsBanner } = loadTsxComponent(path.join('components', 'dashboard', 'PersonalizedAlertsBanner.tsx'));
+  const pabHtml = renderToStaticMarkup(
+    React.createElement(PersonalizedAlertsBanner, {
+      alerts: [
+        { activity: 'Morning Run', alert_level: 'warning', affected_member: 'Asthma Member', message: 'Avoid outdoor cardio.' },
+        { activity: 'Commute', alert_level: 'caution', affected_member: 'Commuter', message: 'Use N95 mask.' },
+      ],
+    })
+  );
+  assert.ok(pabHtml.includes('text-slate-600') && !pabHtml.includes('text-slate-500'));
+
+  const { WhatChangedInspector } = loadTsxComponent(path.join('components', 'explainability', 'WhatChangedInspector.tsx'));
+  const wciHtml = renderToStaticMarkup(
+    React.createElement(WhatChangedInspector, {
+      delta: {
+        prevLocation: 'Delhi',
+        currLocation: 'Bengaluru',
+        prevAqi: 210,
+        currAqi: 75,
+        prevProfileName: 'Commuter',
+        currProfileName: 'WFH',
+        prevRiskScore: 72.0,
+        currRiskScore: 41.0,
+        addedRuleTitles: ['Open midday windows'],
+        removedRuleTitles: ['Mandatory N95 mask'],
+        changeRationale: 'Lower ambient AQI.',
+      },
+    })
+  );
+  // Strip decorative <CheckCircle> icon on L162 before verifying no text-emerald-600 text remains
+  const wciWithoutDecorativeIcon = wciHtml.replace(/<svg data-icon="CheckCircle"[^>]*><\/svg>/g, '');
+  assert.ok(wciWithoutDecorativeIcon.includes('text-emerald-700 font-bold') && !wciWithoutDecorativeIcon.includes('text-emerald-600'));
+  assert.ok(wciHtml.includes('text-xs text-slate-600') && wciHtml.includes('line-through'));
+
+  // Verify RAC-171 beneficiary pill inside RecommendedActionsCard uses slate-600 on slate-100
+  const { ImpactCategoryBadges } = loadTsxComponent(
+    path.join('components', 'explainability', 'ImpactCategoryBadges.tsx')
+  );
+  const { RecommendedActionsCard } = loadTsxComponent(
+    path.join('components', 'dashboard', 'RecommendedActionsCard.tsx'),
+    {
+      '../common/Badge': { Badge },
+      '../explainability/CausalChainVisualizer': { CausalChainVisualizer },
+      '../explainability/ImpactCategoryBadges': { ImpactCategoryBadges },
+    }
+  );
+  const racHtmlC = renderToStaticMarkup(
+    React.createElement(RecommendedActionsCard, {
+      todayRoutine: {
+        morning: {
+          summary: 'Morning summary',
+          actions: [{ action: 'Mask up', priority: 'High', timing: '08:00', beneficiary: 'Commuters', trigger_condition: 'AQI>200', why_now: 'Peak traffic', expected_mechanism: 'Filters PM2.5' }],
+        },
+        afternoon: { summary: 'Afternoon', actions: [] },
+        evening: { summary: 'Evening', actions: [] },
+        night: { summary: 'Night', actions: [] },
+      },
+      isAiGenerated: false,
+    })
+  );
+  assert.ok(racHtmlC.includes('text-slate-600 bg-slate-100') && !racHtmlC.includes('text-slate-500 bg-slate-100'));
+
+  const { HouseholdMembersCard } = loadTsxComponent(path.join('components', 'profile', 'HouseholdMembersCard.tsx'));
+  const hmcHtml = renderToStaticMarkup(
+    React.createElement(HouseholdMembersCard, {
+      profile: {
+        profile_name: 'Test',
+        num_adults: 2,
+        children_ages: [],
+        num_older_adults: 1,
+        has_asthma_or_respiratory_vulnerability: false,
+        num_outdoor_workers: 0,
+        mobility_limited_member: false,
+        ventilation: 'sealed_ac',
+        commute_habits: { is_daily_commuter: false, primary_mode: 'public_metro', estimated_daily_commute_minutes: 30 },
+        exercise_habits: { participates_in_outdoor_exercise: false, time_of_day: 'midday', intensity: 'moderate' },
+        cooking_habits: { has_kitchen_exhaust_or_chimney: true, heavy_frying_or_tadka_daily: false, uses_incense_or_mosquito_coils: false },
+        purifier_setup: { has_air_purifier: false, purifier_count: 0, located_in_bedrooms: false, operates_continuously: false },
+        has_outdoor_child_play: false,
+      },
+      onChange: () => {},
+    })
+  );
+  assert.ok(hmcHtml.includes('text-rose-700 bg-rose-50') && !hmcHtml.includes('text-rose-600 bg-rose-50'));
+
+  const { IndoorConditionsCard } = loadTsxComponent(path.join('components', 'profile', 'IndoorConditionsCard.tsx'));
+  const iccHtml = renderToStaticMarkup(
+    React.createElement(IndoorConditionsCard, {
+      profile: {
+        profile_name: 'Test',
+        num_adults: 1,
+        children_ages: [],
+        num_older_adults: 0,
+        has_asthma_or_respiratory_vulnerability: false,
+        num_outdoor_workers: 0,
+        mobility_limited_member: false,
+        ventilation: 'sealed_ac',
+        commute_habits: { is_daily_commuter: false, primary_mode: 'public_metro', estimated_daily_commute_minutes: 30 },
+        exercise_habits: { participates_in_outdoor_exercise: false, time_of_day: 'midday', intensity: 'moderate' },
+        cooking_habits: { has_kitchen_exhaust_or_chimney: true, heavy_frying_or_tadka_daily: false, uses_incense_or_mosquito_coils: false },
+        purifier_setup: { has_air_purifier: false, purifier_count: 0, located_in_bedrooms: false, operates_continuously: false },
+        has_outdoor_child_play: false,
+      },
+      onChange: () => {},
+    })
+  );
+  assert.ok(iccHtml.includes('text-slate-300'), 'Selected option must retain text-slate-300 on bg-slate-900');
+  assert.ok(iccHtml.includes('text-slate-600'), 'Unselected option descriptions must use text-slate-600 for hover AA contrast');
+
+  // Check AQITrendChart, NaturalLanguageProfileCard, and ProfileSetupPage updated semantic classes
+  const chartSrcC = fs.readFileSync(path.join(srcDir, 'components', 'dashboard', 'AQITrendChart.tsx'), 'utf-8');
+  assert.ok(chartSrcC.includes('bg-vayu-700 text-white hover:bg-vayu-800'));
+  assert.ok(chartSrcC.includes("fill: '#b91c1c'"));
+  const { NaturalLanguageProfileCard } = loadTsxComponent(
+    path.join('components', 'profile', 'NaturalLanguageProfileCard.tsx')
+  );
+  const nlpHtmlC = renderToStaticMarkup(
+    React.createElement(NaturalLanguageProfileCard, {
+      onParse: async () => {},
+      isParsing: false,
+      parseError: null,
+      parsedSuggestion: {
+        message: 'Parsed profile',
+        suggested_fields: {
+          has_asthma_or_respiratory_vulnerability: true,
+          confidence: 0.92,
+        },
+      },
+      onConfirm: () => {},
+      onDiscard: () => {},
+    })
+  );
+  assert.ok(nlpHtmlC.includes('text-rose-700') && !nlpHtmlC.includes('text-rose-600'));
+  assert.ok(nlpHtmlC.includes('bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800'));
+  const pspSrcC = fs.readFileSync(path.join(srcDir, 'components', 'profile', 'ProfileSetupPage.tsx'), 'utf-8');
+  assert.ok(pspSrcC.includes('text-vayu-700 animate-pulse') && !pspSrcC.includes('text-vayu-600 animate-pulse'));
+});

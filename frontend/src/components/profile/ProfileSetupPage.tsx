@@ -80,7 +80,7 @@ export const ProfileSetupPage: React.FC<ProfileSetupPageProps> = ({
                 Personalization Engine
               </span>
               {isRecalculating && (
-                <span className="text-[11px] font-semibold text-vayu-600 animate-pulse">
+                <span className="text-[11px] font-semibold text-vayu-700 animate-pulse">
                   ● Re-calculating Exposure Risk…
                 </span>
               )}

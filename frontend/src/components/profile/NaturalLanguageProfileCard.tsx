@@ -202,7 +202,7 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
             {suggestion.has_asthma_or_respiratory_vulnerability !== undefined && (
               <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
                 <span className="text-[10px] text-slate-500 block">Asthma / Vulnerability</span>
-                <strong className={suggestion.has_asthma_or_respiratory_vulnerability ? 'text-rose-600' : 'text-slate-800'}>
+                <strong className={suggestion.has_asthma_or_respiratory_vulnerability ? 'text-rose-700' : 'text-slate-800'}>
                   {suggestion.has_asthma_or_respiratory_vulnerability ? 'Yes (Reported)' : 'None'}
                 </strong>
               </div>
@@ -262,7 +262,7 @@ export const NaturalLanguageProfileCard: React.FC<NaturalLanguageProfileCardProp
             <button
               type="button"
               onClick={onConfirm}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 active:scale-95 transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-700 text-white text-xs font-bold hover:bg-emerald-800 active:scale-95 transition-all shadow-sm"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               Confirm & Apply to Profile

@@ -130,7 +130,7 @@ export const IndoorConditionsCard: React.FC<IndoorConditionsCardProps> = ({
                     </span>
                   )}
                 </div>
-                <p className={`text-[11px] leading-snug mb-1.5 ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
+                <p className={`text-[11px] leading-snug mb-1.5 ${isSelected ? 'text-slate-300' : 'text-slate-600'}`}>
                   {opt.desc}
                 </p>
                 <p className={`text-[10px] font-mono ${isSelected ? 'text-emerald-300' : 'text-slate-600'}`}>
