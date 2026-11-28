@@ -1,5 +1,7 @@
 """API integration and edge-case testing for all VayuSense endpoints."""
 
+from datetime import datetime, timezone
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from app.dependencies import get_waqi_service
@@ -22,6 +24,7 @@ async def test_recommendations_rules_endpoint_with_custom_profile():
     class DeterministicMockWAQIService:
         async def get_aqi_by_feed(self, location_or_station: str) -> AQIResponse:
             called_locations.append(location_or_station)
+            retrieval_dt = datetime.now(timezone.utc)
             return AQIResponse(
                 location_name="Delhi",
                 station_name="Mandir Marg, Delhi",
@@ -36,11 +39,14 @@ async def test_recommendations_rules_endpoint_with_custom_profile():
                 dominant_pollutant="pm25",
                 pollutants=PollutantMeasurements(),
                 source="WAQI (World Air Quality Index Project / aqicn.org)",
-                retrieval_time="2026-11-20T20:00:00Z",
+                measurement_timestamp=int(retrieval_dt.timestamp()),
+                retrieval_time=retrieval_dt.isoformat(),
                 data_freshness="Live (< 1h ago)",
             )
 
     app = create_app()
+    sentinel = object()
+    previous_override = app.dependency_overrides.get(get_waqi_service, sentinel)
     app.dependency_overrides[get_waqi_service] = lambda: DeterministicMockWAQIService()
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -58,7 +64,10 @@ async def test_recommendations_rules_endpoint_with_custom_profile():
             assert len(data["recommendations"]) > 0
             assert data["profile_name"] == PRESET_DAILY_COMMUTER.profile_name
     finally:
-        app.dependency_overrides.clear()
+        if previous_override is sentinel:
+            app.dependency_overrides.pop(get_waqi_service, None)
+        else:
+            app.dependency_overrides[get_waqi_service] = previous_override
 
 
 @pytest.mark.asyncio
