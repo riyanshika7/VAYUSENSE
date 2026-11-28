@@ -60,11 +60,13 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         lifespan=lifespan,
     )
 
-    # 1. Defensive HTTP security headers
-    app.add_middleware(SecurityHeadersMiddleware)
-
-    # 2. Maximum request body limit (1 MB) including chunked transfer encoding
+    # 1. Maximum request body limit (1 MB) including chunked transfer encoding
+    # Registered before BaseHTTPMiddleware layers so streamed _PayloadTooLargeError
+    # reaches FastAPI's HTTPException handler directly instead of TaskGroup ExceptionGroup.
     app.add_middleware(RequestSizeLimitMiddleware, max_bytes=1_048_576)
+
+    # 2. Defensive HTTP security headers (also covers 413/400 limit responses)
+    app.add_middleware(SecurityHeadersMiddleware)
 
     # 3. Sliding-window rate limiter with explicit proxy/edge trust
     app.add_middleware(

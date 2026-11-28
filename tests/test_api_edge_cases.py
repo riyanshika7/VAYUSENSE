@@ -2,7 +2,9 @@
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from app.dependencies import get_waqi_service
 from app.main import create_app
+from app.models.aqi import AQIResponse, AQIScaleClassification, GeoCoordinates, PollutantMeasurements
 from app.models.profile import PRESET_DAILY_COMMUTER
 
 
@@ -13,21 +15,50 @@ def app_client():
 
 
 @pytest.mark.asyncio
-async def test_recommendations_rules_endpoint_with_custom_profile(app_client):
+async def test_recommendations_rules_endpoint_with_custom_profile():
     """Verify POST /api/recommendations/rules generates deterministic recommendations for custom profile."""
-    async with app_client as client:
-        payload = {
-            "profile": PRESET_DAILY_COMMUTER.model_dump(),
-            "location": "delhi",
-        }
-        resp = await client.post("/api/recommendations/rules", json=payload)
-        assert resp.status_code == 200
-        data = resp.json()
-        assert "risk_assessment" in data
-        assert "exposure_risk_score" in data["risk_assessment"]
-        assert "recommendations" in data
-        assert len(data["recommendations"]) > 0
-        assert data["profile_name"] == PRESET_DAILY_COMMUTER.profile_name
+    called_locations = []
+
+    class DeterministicMockWAQIService:
+        async def get_aqi_by_feed(self, location_or_station: str) -> AQIResponse:
+            called_locations.append(location_or_station)
+            return AQIResponse(
+                location_name="Delhi",
+                station_name="Mandir Marg, Delhi",
+                station_id=7024,
+                coordinates=GeoCoordinates(latitude=28.6358, longitude=77.2245),
+                aqi=184,
+                classification=AQIScaleClassification(
+                    category="Unhealthy",
+                    color_hex="#FF0000",
+                    health_implications="Health warnings",
+                ),
+                dominant_pollutant="pm25",
+                pollutants=PollutantMeasurements(),
+                source="WAQI (World Air Quality Index Project / aqicn.org)",
+                retrieval_time="2026-11-20T20:00:00Z",
+                data_freshness="Live (< 1h ago)",
+            )
+
+    app = create_app()
+    app.dependency_overrides[get_waqi_service] = lambda: DeterministicMockWAQIService()
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            payload = {
+                "profile": PRESET_DAILY_COMMUTER.model_dump(),
+                "location": "delhi",
+            }
+            resp = await client.post("/api/recommendations/rules", json=payload)
+            assert resp.status_code == 200
+            assert called_locations == ["delhi"]
+            data = resp.json()
+            assert "risk_assessment" in data
+            assert "exposure_risk_score" in data["risk_assessment"]
+            assert "recommendations" in data
+            assert len(data["recommendations"]) > 0
+            assert data["profile_name"] == PRESET_DAILY_COMMUTER.profile_name
+    finally:
+        app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
